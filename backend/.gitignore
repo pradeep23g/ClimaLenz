@@ -1,0 +1,15 @@
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+
+# Virtual environments
+venv/
+env/
+
+# Environment variables
+.env
+
+# HUGE FLAG: Do NOT commit model weights!
+artifacts/*.pt
+*.pt
