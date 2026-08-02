@@ -1,0 +1,12 @@
+fastapi>=0.110
+uvicorn[standard]>=0.27
+numpy>=1.26
+pydantic>=2.6
+torch>=2.2
+matplotlib>=3.8
+
+# Only needed for the real Planetary Computer provider (not the synthetic client):
+rioxarray>=0.15
+pyproj>=3.6
+pystac-client>=0.8
+planetary-computer>=1.0
