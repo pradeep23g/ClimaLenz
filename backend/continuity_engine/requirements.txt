@@ -1,0 +1,14 @@
+fastapi>=0.110
+uvicorn[standard]>=0.27
+numpy>=1.26
+pydantic>=2.6
+
+# Only needed for the real Planetary Computer provider:
+rasterio>=1.3
+pystac-client>=0.8
+planetary-computer>=1.0
+
+# Only needed for actual reconstruction (training or inference with a
+# real trained model) — the synthetic provider + confidence_map module
+# work without this installed at all:
+torch>=2.0
