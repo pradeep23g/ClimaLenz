@@ -25,6 +25,7 @@ def load_repair_model(filename: str = "cloud_repair_unet.pt"):
             f"training/train_reconstruction.py first, or copy a trained "
             f".pt file into artifacts/."
         )
-    model.load_state_dict(torch.load(weights_path, weights_only=True))
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    model.load_state_dict(torch.load(weights_path, weights_only=True, map_location=device))
     model.eval()
     return model

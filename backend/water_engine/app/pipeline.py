@@ -145,15 +145,16 @@ def execute_environmental_pipeline(
 
     # 6. Package Consolidated Output
     return EnvironmentalPipelineReport(
-        scene_identifier=observation_context.asset_id,
-        data_provider=client.gateway_name,
-        capture_timestamp_utc=observation_context.acquisition_timestamp.isoformat(),
-        cloud_cover_percentage=observation_context.cloud_fraction,
-        spatial_domain=domain_category,
-        water_coverage_fraction=water_fraction,
-        spectral_indices=spectral_summary.metrics,
-        ecological_risk=risk_profile,
-        data_confidence=confidence_assessment,
-        requires_ground_truth_audit=field_audit_required,
-        pipeline_warnings=pipeline_warnings,
-    )
+    scene_identifier=observation_context.asset_id,
+    data_provider=client.gateway_name,
+    capture_timestamp_utc=observation_context.acquisition_timestamp.isoformat(),
+    cloud_cover_percentage=observation_context.cloud_fraction,
+    spatial_domain=domain_category,
+    water_coverage_fraction=water_fraction,
+    flooded_vegetation_fraction=spectral_summary.flooded_vegetation_ratio,  
+    spectral_indices=spectral_summary.metrics,
+    ecological_risk=risk_profile,
+    data_confidence=confidence_assessment,
+    requires_ground_truth_audit=field_audit_required,
+    pipeline_warnings=pipeline_warnings,
+)
