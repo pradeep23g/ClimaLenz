@@ -6,7 +6,10 @@ ARTIFACTS_DIR = Path(__file__).parent.parent.parent / "artifacts"
 
 def load_model(filename: str) -> ThermalCNN:
     model = ThermalCNN()
-    model.load_state_dict(torch.load(ARTIFACTS_DIR / filename, weights_only=True))
+    model.load_state_dict(
+    torch.load(ARTIFACTS_DIR / filename, weights_only=True,
+               map_location=torch.device("cuda" if torch.cuda.is_available() else "cpu"))
+)
     model.eval()
     return model
 
