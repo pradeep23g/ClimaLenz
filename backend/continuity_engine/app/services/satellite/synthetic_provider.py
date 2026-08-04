@@ -15,6 +15,8 @@ import numpy as np
 
 from app.services.satellite.base import DualSourceBundle
 
+if end_date < start_date:
+    raise ValueError("end_date must be after start_date")
 
 class SyntheticDualProvider:
     name = "continuity-synthetic"

@@ -81,7 +81,8 @@ def evaluate_colocation(water_report: dict, heat_result: dict) -> dict:
     ecological_risk = water_report["ecological_risk"]
     water_score = ecological_risk["aggregate_score"]
     water_tier = ecological_risk["tier"]
-
+    water_tier_name = RiskTier(water_tier).name   # "MEDIUM"
+    
     confidence = water_report.get("data_confidence") or {}
     confidence_band = confidence.get("band")
 
