@@ -72,7 +72,6 @@ class PlanetaryComputerGateway:
                 intersects=spatial_bounds,
                 datetime=temporal_window,
                 query={"eo:cloud_cover": {"lt": max_cloud_tolerance}},
-                sortby=[{"field": "properties.datetime", "direction": "desc"}],
                 limit=5,  # Reduced limit to speed up JSON payload parsing
             )
             matched_items = list(query_results.items())
@@ -128,31 +127,32 @@ class PlanetaryComputerGateway:
         extracted_layers: Dict[str, Tuple[np.ndarray, np.ndarray]] = {}
 
         # 1. IO Bound: Fetch and clip rasters from blob storage
-        for cube_attr, stac_key in _SENTINEL2_ASSET_MAPPING.items():
-            asset_uri = stac_item.assets[stac_key].href
-            
-            with rasterio.open(asset_uri) as dataset:
-                # Reproject GeoJSON bounds into the raster's native CRS
-                native_geom = transform_geom("EPSG:4326", dataset.crs, clipping_geometry)
+        with rasterio.Env(GDAL_HTTP_TIMEOUT="15", GDAL_HTTP_MAX_RETRY="2"):
+            for cube_attr, stac_key in _SENTINEL2_ASSET_MAPPING.items():
+                asset_uri = stac_item.assets[stac_key].href
                 
-                cropped_matrix, _ = rio_clip(
-                    dataset,
-                    [native_geom],
-                    crop=True,
-                    indexes=1,
-                    filled=False
-                )
-                
-                # Scale physical reflectance and cast to memory-efficient float32
-                scaled_data = np.asarray(cropped_matrix, dtype=np.float32) / _REFLECTANCE_DENOMINATOR
-                
-                # Extract embedded nodata masks
-                if np.ma.isMaskedArray(cropped_matrix):
-                    nodata_mask = np.ma.getmaskarray(cropped_matrix)
-                else:
-                    nodata_mask = np.zeros(scaled_data.shape, dtype=bool)
+                with rasterio.open(asset_uri) as dataset:
+                    # Reproject GeoJSON bounds into the raster's native CRS
+                    native_geom = transform_geom("EPSG:4326", dataset.crs, clipping_geometry)
                     
-                extracted_layers[cube_attr] = (scaled_data, nodata_mask)
+                    cropped_matrix, _ = rio_clip(
+                        dataset,
+                        [native_geom],
+                        crop=True,
+                        indexes=1,
+                        filled=False
+                    )
+                    
+                    # Scale physical reflectance and cast to memory-efficient float32
+                    scaled_data = np.asarray(cropped_matrix, dtype=np.float32) / _REFLECTANCE_DENOMINATOR
+                    
+                    # Extract embedded nodata masks
+                    if np.ma.isMaskedArray(cropped_matrix):
+                        nodata_mask = np.ma.getmaskarray(cropped_matrix)
+                    else:
+                        nodata_mask = np.zeros(scaled_data.shape, dtype=bool)
+                        
+                    extracted_layers[cube_attr] = (scaled_data, nodata_mask)
 
         # 2. CPU Bound: Resolve spatial resolution mismatches (10m vs 20m bands)
         # Determine the highest resolution shape (largest matrix dimensions)

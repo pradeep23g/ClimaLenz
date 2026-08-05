@@ -43,7 +43,10 @@ def assess_colocation(payload: CoLocationRequest) -> CoLocationReport:
     is a reasonable follow-up once this end-to-end path is proven.
     """
     try:
-        water_report = fetch_water_assessment(payload.spatial_geometry)
+        water_report = fetch_water_assessment(
+            payload.spatial_geometry,
+            cloud_tolerance_pct=payload.cloud_tolerance_pct,
+        )
     except httpx.HTTPStatusError as err:
         logger.error(f"water_engine returned an error: {err}")
         raise HTTPException(

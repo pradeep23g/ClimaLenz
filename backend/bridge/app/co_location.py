@@ -81,7 +81,9 @@ def evaluate_colocation(water_report: dict, heat_result: dict) -> dict:
     ecological_risk = water_report["ecological_risk"]
     water_score = ecological_risk["aggregate_score"]
     water_tier = ecological_risk["tier"]
-    water_tier_name = RiskTier(water_tier).name   # "MEDIUM"
+    
+    tier_map = {1: "LOW", 2: "MEDIUM", 3: "HIGH", 4: "CRITICAL"}
+    water_tier_name = tier_map.get(water_tier, str(water_tier))
     
     confidence = water_report.get("data_confidence") or {}
     confidence_band = confidence.get("band")
@@ -93,7 +95,7 @@ def evaluate_colocation(water_report: dict, heat_result: dict) -> dict:
 
     narrative = _build_narrative(
         triggered=triggered,
-        water_tier=water_tier,
+        water_tier=water_tier_name,
         water_score=water_score,
         guardrail_status=guardrail_status,
         delta_summary=delta_summary,
@@ -102,7 +104,7 @@ def evaluate_colocation(water_report: dict, heat_result: dict) -> dict:
     return {
         "triggered": triggered,
         "water_score": water_score,
-        "water_tier": water_tier,
+        "water_tier": water_tier_name,
         "water_confidence_band": confidence_band,
         "heat_guardrail_status": guardrail_status,
         "heat_intervention_type": heat_result["intervention_type"],

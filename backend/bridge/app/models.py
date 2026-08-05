@@ -18,6 +18,9 @@ class CoLocationRequest(BaseModel):
     bounds (4.0/3.0/5.0°C). A mild default demonstrates the PASSED path;
     override with a larger delta to demonstrate FLAGGED."""
 
+    cloud_tolerance_pct: float = 30.0
+    """Allows the caller to increase cloud tolerance to trigger the Continuity Engine repair."""
+
 
 class CoLocationReport(BaseModel):
     """Combined output — the thing ClimaLenz's whole pitch is actually about."""

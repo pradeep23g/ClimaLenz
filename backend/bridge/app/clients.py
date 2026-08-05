@@ -25,7 +25,7 @@ def fetch_water_assessment(
             "observation_lookback_days": lookback_days,
             "cloud_tolerance_pct": cloud_tolerance_pct,
         },
-        timeout=30.0,
+        timeout=300.0,
     )
     resp.raise_for_status()
     return resp.json()  # -> EnvironmentalPipelineReport, JSON-decoded
@@ -47,7 +47,7 @@ def fetch_heat_simulation(bbox: list[float], intervention_type: str, delta: floa
             "intervention_type": intervention_type,
             "delta": delta,
         },
-        timeout=60.0,
+        timeout=300.0,
     )
     resp.raise_for_status()
     return resp.json()  # -> SimulationResponse, JSON-decoded

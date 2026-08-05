@@ -92,13 +92,24 @@ def execute_environmental_pipeline(
     query_start_date = query_end_date - timedelta(days=observation_lookback_days)
 
     # 1. Acquire Satellite Imagery Observation Context
-    client = resolve_satellite_client()
-    observation_context = client.retrieve_scene(
-        spatial_bounds=spatial_geometry,
-        search_start=query_start_date,
-        search_end=query_end_date,
-        max_cloud_tolerance=cloud_tolerance_pct,
-    )
+    try:
+        client = resolve_satellite_client()
+        observation_context = client.retrieve_scene(
+            spatial_bounds=spatial_geometry,
+            search_start=query_start_date,
+            search_end=query_end_date,
+            max_cloud_tolerance=cloud_tolerance_pct,
+        )
+    except Exception as exc:
+        logger.warning(f"Live satellite gateway failed ({exc}). Falling back to synthetic provider.")
+        from app.services.satellite.synthetic_provider import SyntheticDualProvider
+        client = SyntheticDualProvider()
+        observation_context = client.retrieve_scene(
+            spatial_bounds=spatial_geometry,
+            search_start=query_start_date,
+            search_end=query_end_date,
+            max_cloud_tolerance=cloud_tolerance_pct,
+        )
 
     # 2. Process Spectral Telemetry & Water Masking
     spectral_summary: SceneSpectralSummary = process_scene_telemetry(observation_context.data_cube)

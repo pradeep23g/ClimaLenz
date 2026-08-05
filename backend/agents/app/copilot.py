@@ -34,44 +34,100 @@ class CopilotInput(BaseModel):
     prompt: str = Field(..., min_length=2)
 
 
-def run_heat_what_if(intervention_type: str, delta: float) -> Dict[str, Any]:
-    r = requests.post(
-        f"{HEAT_ENGINE_URL}/what-if",
-        json={"intervention_type": intervention_type, "delta": delta},
-        timeout=25,
-    )
+def _post(url: str, payload: Dict[str, Any], *, timeout: int = 25) -> Dict[str, Any]:
+    """
+    Shared POST helper. Raises requests.HTTPError / requests.RequestException on
+    failure — callers are responsible for catching and converting into a
+    structured tool_result so one dead downstream service can't 500 the
+    whole copilot turn.
+    """
+    r = requests.post(url, json=payload, timeout=timeout)
     r.raise_for_status()
     return r.json()
 
 
-def assess_water_risk(aoi_id: str) -> Dict[str, Any]:
-    r = requests.post(
-        f"{WATER_ENGINE_URL}/assess",
-        json={"aoi_id": aoi_id},
-        timeout=25,
-    )
-    r.raise_for_status()
-    return r.json()
+def run_heat_what_if(
+    intervention_type: str,
+    delta: float,
+    bbox: Optional[List[float]] = None,
+    date_range: Optional[str] = None,
+) -> Dict[str, Any]:
+    """
+    Matches heat_engine's real contract: POST /v1/simulations/what-if
+    (see backend/heat_engine/app/main.py + models/simulation_schemas.py).
+    bbox / date_range are optional — the engine defaults them (Chennai bbox)
+    if omitted, so the copilot only has to supply what the user actually
+    specified.
+    """
+    payload: Dict[str, Any] = {"intervention_type": intervention_type, "delta": delta}
+    if bbox is not None:
+        payload["bbox"] = bbox
+    if date_range is not None:
+        payload["date_range"] = date_range
+    return _post(f"{HEAT_ENGINE_URL}/v1/simulations/what-if", payload)
 
 
-def get_continuity_repair(grid_id: str) -> Dict[str, Any]:
-    r = requests.post(
-        f"{CONTINUITY_ENGINE_URL}/repair",
-        json={"grid_id": grid_id},
-        timeout=25,
-    )
-    r.raise_for_status()
-    return r.json()
+def assess_water_risk(
+    spatial_geometry: Dict[str, Any],
+    observation_lookback_days: int = 30,
+    cloud_tolerance_pct: float = 30.0,
+) -> Dict[str, Any]:
+    """
+    Matches water_engine's real contract: POST /v1/assessments/generate,
+    which requires a GeoJSON Polygon (spatial_geometry) — there is no
+    aoi_id concept in that engine.
+    """
+    payload = {
+        "spatial_geometry": spatial_geometry,
+        "observation_lookback_days": observation_lookback_days,
+        "cloud_tolerance_pct": cloud_tolerance_pct,
+    }
+    return _post(f"{WATER_ENGINE_URL}/v1/assessments/generate", payload)
 
 
-def get_colocation_assessment(location: str) -> Dict[str, Any]:
-    r = requests.post(
-        f"{COLOCATION_ENGINE_URL}/assess",
-        json={"location": location},
-        timeout=25,
-    )
-    r.raise_for_status()
-    return r.json()
+def get_continuity_repair(
+    geometry: Dict[str, Any],
+    start_date: str,
+    end_date: str,
+) -> Dict[str, Any]:
+    """
+    Matches continuity_engine's real contract: POST /v1/reconstruction/repair,
+    requiring a GeoJSON geometry plus a start/end date (ISO 'YYYY-MM-DD') —
+    there is no grid_id concept in that engine.
+    """
+    payload = {"geometry": geometry, "start_date": start_date, "end_date": end_date}
+    return _post(f"{CONTINUITY_ENGINE_URL}/v1/reconstruction/repair", payload)
+
+
+def get_colocation_assessment(
+    spatial_geometry: Dict[str, Any],
+    bbox: List[float],
+    intervention_type: str = "CANOPY",
+    delta: float = 0.15,
+) -> Dict[str, Any]:
+    """
+    Matches the bridge service's real contract: POST /v1/colocation/assess
+    (backend/bridge/app/main.py), which fans out to water_engine + heat_engine
+    itself. Requires both spatial_geometry (GeoJSON, for water_engine) and
+    bbox (for heat_engine) describing the same AOI — there is no bare
+    'location' string concept in that engine.
+    """
+    payload = {
+        "spatial_geometry": spatial_geometry,
+        "bbox": bbox,
+        "intervention_type": intervention_type,
+        "delta": delta,
+    }
+    return _post(f"{COLOCATION_ENGINE_URL}/v1/colocation/assess", payload)
+
+
+_GEOJSON_POLYGON_SCHEMA = {
+    "type": "object",
+    "description": (
+        "GeoJSON Polygon geometry, e.g. "
+        '{"type": "Polygon", "coordinates": [[[lon, lat], ...]]}'
+    ),
+}
 
 
 def _tools() -> List[types.Tool]:
@@ -80,41 +136,82 @@ def _tools() -> List[types.Tool]:
             function_declarations=[
                 types.FunctionDeclaration(
                     name="run_heat_what_if",
-                    description="Run heat what-if scenario for an intervention delta.",
+                    description=(
+                        "Run heat_engine's what-if PINN simulation for a micro-climate "
+                        "intervention delta over an AOI."
+                    ),
                     parameters={
                         "type": "object",
                         "properties": {
-                            "intervention_type": {"type": "string"},
-                            "delta": {"type": "number"},
+                            "intervention_type": {
+                                "type": "string",
+                                "description": "e.g. CANOPY, ALBEDO, etc.",
+                            },
+                            "delta": {
+                                "type": "number",
+                                "description": "Magnitude of the intervention, between -1.0 and 1.0.",
+                            },
+                            "bbox": {
+                                "type": "array",
+                                "items": {"type": "number"},
+                                "description": "[min_lon, min_lat, max_lon, max_lat]. Optional — omit to use the engine default AOI.",
+                            },
+                            "date_range": {
+                                "type": "string",
+                                "description": "STAC-style 'start/end' ISO date range. Optional.",
+                            },
                         },
                         "required": ["intervention_type", "delta"],
                     },
                 ),
                 types.FunctionDeclaration(
                     name="assess_water_risk",
-                    description="Assess water risk for an AOI id.",
+                    description="Run water_engine's deterministic ecological risk assessment for an AOI polygon.",
                     parameters={
                         "type": "object",
-                        "properties": {"aoi_id": {"type": "string"}},
-                        "required": ["aoi_id"],
+                        "properties": {
+                            "spatial_geometry": _GEOJSON_POLYGON_SCHEMA,
+                            "observation_lookback_days": {"type": "integer"},
+                            "cloud_tolerance_pct": {"type": "number"},
+                        },
+                        "required": ["spatial_geometry"],
                     },
                 ),
                 types.FunctionDeclaration(
                     name="get_continuity_repair",
-                    description="Get continuity repair plan for a grid id.",
+                    description=(
+                        "Run continuity_engine's SAR-guided cloud reconstruction for an AOI "
+                        "over a date window, to repair cloud-obscured optical imagery."
+                    ),
                     parameters={
                         "type": "object",
-                        "properties": {"grid_id": {"type": "string"}},
-                        "required": ["grid_id"],
+                        "properties": {
+                            "geometry": _GEOJSON_POLYGON_SCHEMA,
+                            "start_date": {"type": "string", "description": "ISO date, YYYY-MM-DD."},
+                            "end_date": {"type": "string", "description": "ISO date, YYYY-MM-DD."},
+                        },
+                        "required": ["geometry", "start_date", "end_date"],
                     },
                 ),
                 types.FunctionDeclaration(
                     name="get_colocation_assessment",
-                    description="Get co-location assessment for a location.",
+                    description=(
+                        "Run the bridge service's combined water+heat co-location assessment "
+                        "for one AOI (same geometry expressed both as a polygon and a bbox)."
+                    ),
                     parameters={
                         "type": "object",
-                        "properties": {"location": {"type": "string"}},
-                        "required": ["location"],
+                        "properties": {
+                            "spatial_geometry": _GEOJSON_POLYGON_SCHEMA,
+                            "bbox": {
+                                "type": "array",
+                                "items": {"type": "number"},
+                                "description": "[min_lon, min_lat, max_lon, max_lat] for the same AOI.",
+                            },
+                            "intervention_type": {"type": "string"},
+                            "delta": {"type": "number"},
+                        },
+                        "required": ["spatial_geometry", "bbox"],
                     },
                 ),
             ]
@@ -162,19 +259,46 @@ Recent memory:
             name = fc.name
             args = dict(fc.args or {})
 
-            if name == "run_heat_what_if":
-                result = run_heat_what_if(
-                    intervention_type=str(args["intervention_type"]),
-                    delta=float(args["delta"]),
-                )
-            elif name == "assess_water_risk":
-                result = assess_water_risk(aoi_id=str(args["aoi_id"]))
-            elif name == "get_continuity_repair":
-                result = get_continuity_repair(grid_id=str(args["grid_id"]))
-            elif name == "get_colocation_assessment":
-                result = get_colocation_assessment(location=str(args["location"]))
-            else:
-                result = {"error": f"Unsupported tool: {name}"}
+            try:
+                if name == "run_heat_what_if":
+                    result = run_heat_what_if(
+                        intervention_type=str(args["intervention_type"]),
+                        delta=float(args["delta"]),
+                        bbox=[float(x) for x in args["bbox"]] if args.get("bbox") else None,
+                        date_range=args.get("date_range"),
+                    )
+                elif name == "assess_water_risk":
+                    result = assess_water_risk(
+                        spatial_geometry=dict(args["spatial_geometry"]),
+                        observation_lookback_days=int(args.get("observation_lookback_days", 30)),
+                        cloud_tolerance_pct=float(args.get("cloud_tolerance_pct", 30.0)),
+                    )
+                elif name == "get_continuity_repair":
+                    result = get_continuity_repair(
+                        geometry=dict(args["geometry"]),
+                        start_date=str(args["start_date"]),
+                        end_date=str(args["end_date"]),
+                    )
+                elif name == "get_colocation_assessment":
+                    result = get_colocation_assessment(
+                        spatial_geometry=dict(args["spatial_geometry"]),
+                        bbox=[float(x) for x in args["bbox"]],
+                        intervention_type=str(args.get("intervention_type", "CANOPY")),
+                        delta=float(args.get("delta", 0.15)),
+                    )
+                else:
+                    result = {"error": f"Unsupported tool: {name}"}
+            except KeyError as missing:
+                result = {"error": f"Model omitted required argument {missing} for tool '{name}'."}
+            except requests.HTTPError as http_err:
+                status_code = http_err.response.status_code if http_err.response is not None else None
+                body = http_err.response.text if http_err.response is not None else str(http_err)
+                result = {
+                    "error": f"Downstream engine call for '{name}' failed (HTTP {status_code}).",
+                    "detail": body,
+                }
+            except requests.RequestException as req_err:
+                result = {"error": f"Could not reach downstream engine for '{name}': {req_err}"}
 
             tool_results.append({"tool": name, "args": args, "result": result})
 

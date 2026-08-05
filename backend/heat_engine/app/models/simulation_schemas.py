@@ -26,9 +26,9 @@ class SimulationRequest(BaseModel):
     )
     delta: float = Field(
         default=0.15,
-        ge=-1.0,
-        le=1.0,
-        description="Magnitude of the NDVI/albedo bump applied for the intervention.",
+        ge=-50.0,
+        le=50.0,
+        description="Magnitude of the intervention bump applied for the simulation.",
     )
 
 
