@@ -34,11 +34,12 @@ def prepare_dataloaders(
     full_dataset = GridLSTDataset(lst_stack, ndvi_grid, landcover_grid, land_mask)
 
     # --- STRICT CHRONOLOGICAL SPLIT ---
-    train_size = int(0.8 * len(full_dataset))
+    total_samples = len(full_dataset)
+    train_size = max(1, min(total_samples - 1, int(0.8 * total_samples))) if total_samples > 1 else 1
     
     # Slice by index so Time (Day 1 -> Day N) is preserved
     train_dataset = Subset(full_dataset, range(0, train_size))
-    val_dataset = Subset(full_dataset, range(train_size, len(full_dataset)))
+    val_dataset = Subset(full_dataset, range(train_size, total_samples))
 
     # Create DataLoaders
     train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)

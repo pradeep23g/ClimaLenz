@@ -43,7 +43,7 @@ class PlanetaryThermalClient:
     def fetch_modis_data(
         self, 
         bbox: List[float] = [80.15, 12.98, 80.29, 13.11], # Defaults to Chennai coordinates
-        date_range: str = "2025-01-01/2026-07-31"         # Expanded date range for better training
+        date_range: str = "2026-07-01/2026-07-31"         # 30-day window for fast live queries
     ) -> List[object]:
         """
         Searches the catalog for MODIS thermal data, filters for Terra satellite, 
@@ -62,8 +62,8 @@ class PlanetaryThermalClient:
         # Sort chronologically using the helper function
         items = sorted(items, key=_get_item_datetime)
 
-        # Filter strictly for MOD11A1 (Terra satellite)
-        clean_items = [it for it in items if "MOD11A1" in it.id]
+        # Filter strictly for MOD11A1 (Terra satellite) and take the 5 most recent scenes for fast live processing
+        clean_items = [it for it in items if "MOD11A1" in it.id][-5:]
         print(f"Found {len(clean_items)} clean daily scenes for Terra satellite!")
 
         # Sign the URLs so rasterio/xarray can actually read the remote files
@@ -74,7 +74,7 @@ class PlanetaryThermalClient:
     def fetch_sentinel2_item(
         self, 
         bbox: List[float] = [80.15, 12.98, 80.29, 13.11], 
-        date_range: str = "2023-01-01/2023-12-31"
+        date_range: str = "2023-01-01/2026-07-31"
     ) -> Optional[object]:
         """
         Searches the catalog for a low-cloud Sentinel-2 scene to calculate real NDVI.
@@ -84,10 +84,21 @@ class PlanetaryThermalClient:
             collections=["sentinel-2-l2a"],
             bbox=bbox,
             datetime=date_range,
-            query={"eo:cloud_cover": {"lt": 5}}
+            query={"eo:cloud_cover": {"lt": 50}},
+            sortby=[{"field": "properties.eo:cloud_cover", "direction": "asc"}],
+            limit=5,
         )
-        # Return the first clean item found
-        return next(search.get_items(), None)
+        items = list(search.items())
+        if items:
+            return items[0]
+        # Fallback search without cloud filter if no scene <50% found
+        fallback_search = self.catalog.search(
+            collections=["sentinel-2-l2a"],
+            bbox=bbox,
+            datetime=date_range,
+            limit=1,
+        )
+        return next(fallback_search.get_items(), None)
 
     def fetch_esa_worldcover_item(
         self, 
@@ -106,7 +117,7 @@ class PlanetaryThermalClient:
     def build_training_arrays(
         self,
         bbox: List[float] = DEFAULT_BBOX,
-        date_range: str = "2025-01-01/2026-07-31",
+        date_range: str = "2026-07-01/2026-07-31",
         grid_shape: Tuple[int, int] = DEFAULT_GRID,
     ) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
         """

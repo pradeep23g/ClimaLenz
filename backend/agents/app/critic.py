@@ -120,16 +120,32 @@ def _all_engine_numbers(engine_payload: Dict[str, Any]) -> List[float]:
     return dedup
 
 
+_RISK_LEVELS = {"LOW", "MEDIUM", "HIGH", "CRITICAL"}
+
+# water_engine's RiskTier is an IntEnum (see backend/water_engine/app/models/risk_metrics.py)
+# and serializes as an int, not a string, so a plain string-key/string-value
+# lookup never matches it. Map 1-4 back onto the same LOW/MEDIUM/HIGH/CRITICAL
+# vocabulary the reporter is expected to use.
+_INT_TIER_MAP = {1: "LOW", 2: "MEDIUM", 3: "HIGH", 4: "CRITICAL"}
+
+
 def _find_risk_level(engine_payload: Dict[str, Any]) -> Optional[str]:
     flat = _flatten_dict(engine_payload)
-    candidates = ["risk_level", "overall_risk", "risk.band", "risk.level"]
+    # "tier" covers water_engine's ecological_risk.tier; the others are kept
+    # for forward-compat with other engines/consolidators using that naming.
+    candidates = ["risk_level", "overall_risk", "risk.band", "risk.level", "tier"]
     for key, value in flat.items():
         lk = key.lower()
-        if any(c in lk for c in candidates):
-            if isinstance(value, str):
-                v = value.strip().upper()
-                if v in {"LOW", "MEDIUM", "HIGH", "CRITICAL"}:
-                    return v
+        if not any(c in lk for c in candidates):
+            continue
+        if isinstance(value, str):
+            v = value.strip().upper()
+            if v in _RISK_LEVELS:
+                return v
+        elif isinstance(value, int) and not isinstance(value, bool):
+            mapped = _INT_TIER_MAP.get(value)
+            if mapped:
+                return mapped
     return None
 
 
@@ -254,6 +270,13 @@ def _deterministic_checks(
     layer_checks.append(LayerCheck(layer_name="copilot", status=cp_status, notes=cp_notes))
 
     # ----- Core deterministic payload checks -----
+    # NOTE: no service in this repo currently assembles a consolidated
+    # payload with these top-level keys — heat_engine, water_engine,
+    # continuity_engine, and the bridge (colocation) service each return
+    # their own independent response shape. Until an orchestrator/consolidator
+    # exists to merge them under these names, this check will realistically
+    # always WARN for real traffic; keeping it as a visible WARN (not FAIL)
+    # is intentional so it surfaces the gap without blocking the pipeline.
     core_status = "PASS"
     core_notes: List[str] = []
     expected_blocks = ["heat", "water", "continuity", "colocation"]

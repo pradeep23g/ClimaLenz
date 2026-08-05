@@ -15,8 +15,6 @@ import numpy as np
 
 from app.services.satellite.base import DualSourceBundle
 
-if end_date < start_date:
-    raise ValueError("end_date must be after start_date")
 
 class SyntheticDualProvider:
     name = "continuity-synthetic"
@@ -28,6 +26,9 @@ class SyntheticDualProvider:
         start_date: date,
         end_date: date,
     ) -> DualSourceBundle:
+        if end_date < start_date:
+            raise ValueError("end_date must be after start_date")
+
         seed = int.from_bytes(
             hashlib.sha256(repr(geometry).encode("utf-8")).digest()[:4], "big"
         )

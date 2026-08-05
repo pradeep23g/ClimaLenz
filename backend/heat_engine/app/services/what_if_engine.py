@@ -26,11 +26,11 @@ def run_what_if(
     # Clone tensor so we don't mutate the original baseline in memory
     modified = baseline_input.clone()
     
-    # Fix: Route the interventions to the correct input channels
+    # Fix: Route the interventions to the correct input channels with physical feature scaling
     if intervention_type == "CANOPY":
         modified[:, 1:2, :, :] += delta # Bump the NDVI channel (index 1) for trees
     elif intervention_type in ("COOL_ROOF", "ALBEDO_CHANGE"):
-        modified[:, 2:3, :, :] += delta # Bump the landcover channel (index 2) for roofs/pavement
+        modified[:, 2:3, :, :] += delta * 50.0 # Scale landcover channel (index 2) into categorical feature space
 
     model.eval()
     with torch.no_grad():
