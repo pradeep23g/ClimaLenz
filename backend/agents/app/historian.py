@@ -13,13 +13,19 @@ from .database import log_agent_trace
 
 load_dotenv()
 
+# --- SURGICAL VERTEX AI INJECTION ---
+# Point Google Cloud Auth directly to your untracked service account key
+os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = "/home/dharshansri2007/lenz/backend/gcp-key.json"
+
 MODEL_NAME = os.getenv("GEMINI_HISTORIAN_MODEL", "gemini-2.5-pro")
-GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY", "").strip()
 
-if not GOOGLE_API_KEY:
-    raise RuntimeError("Missing GOOGLE_API_KEY in environment.")
-
-client = genai.Client(api_key=GOOGLE_API_KEY)
+# Initialize the unified SDK client in Vertex AI mode
+client = genai.Client(
+    vertexai=True,
+    project="lenz-500509",
+    location="us-central1"
+)
+# ------------------------------------
 
 
 class HistorianInput(BaseModel):

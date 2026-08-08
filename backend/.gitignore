@@ -13,3 +13,11 @@ env/
 # HUGE FLAG: Do NOT commit model weights!
 artifacts/*.pt
 *.pt
+
+# Ignore GCP Service Account Keys
+gcp-key.json
+*key*.json
+*credentials*.json
+.secret/
+lenz-500509-91233897b5e3.json
+*.json

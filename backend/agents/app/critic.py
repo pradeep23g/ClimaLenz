@@ -16,11 +16,20 @@ from .database import log_agent_trace
 
 load_dotenv()
 
-GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY", "").strip()
+
+# Point Google Cloud Auth directly to your untracked service account key
+os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = "/home/dharshansri2007/lenz/backend/gcp-key.json"
+
 CRITIC_MODEL = os.getenv("GEMINI_CRITIC_MODEL", "gemini-2.5-flash")
 CRITIC_ENABLE_LLM_AUDIT = os.getenv("CRITIC_ENABLE_LLM_AUDIT", "true").lower() == "true"
 
-_client = genai.Client(api_key=GOOGLE_API_KEY) if GOOGLE_API_KEY else None
+# Initialize the unified SDK client in Vertex AI mode
+_client = genai.Client(
+    vertexai=True,
+    project="lenz-500509",
+    location="us-central1"
+)
+# ------------------------------------
 
 
 # ---------------------------
