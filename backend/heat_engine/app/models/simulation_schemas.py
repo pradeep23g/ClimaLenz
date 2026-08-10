@@ -26,8 +26,8 @@ class SimulationRequest(BaseModel):
     )
     delta: float = Field(
         default=0.15,
-        ge=-50.0,
-        le=50.0,
+        ge=-2.0,
+        le=2.0,
         description="Magnitude of the intervention bump applied for the simulation.",
     )
 

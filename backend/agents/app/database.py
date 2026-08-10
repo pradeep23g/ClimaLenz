@@ -12,20 +12,18 @@ load_dotenv()
 
 logger = logging.getLogger(__name__)
 
-_SUPABASE_URL = os.getenv("SUPABASE_URL", "").strip()
-_SUPABASE_KEY = os.getenv("SUPABASE_KEY", "").strip()
-
-if not _SUPABASE_URL or not _SUPABASE_KEY:
-    raise RuntimeError(
-        "Missing SUPABASE_URL or SUPABASE_KEY in environment. "
-        "Set them in your .env file."
-    )
-
-_client: Client = create_client(_SUPABASE_URL, _SUPABASE_KEY)
+_client: Optional[Client] = None
 
 
 def get_db() -> Client:
     """Return shared Supabase client instance."""
+    global _client
+    if _client is None:
+        url = os.getenv("SUPABASE_URL", "").strip()
+        key = os.getenv("SUPABASE_KEY", "").strip()
+        if not url or not key:
+            raise RuntimeError("Missing SUPABASE_URL or SUPABASE_KEY.")
+        _client = create_client(url, key)
     return _client
 
 

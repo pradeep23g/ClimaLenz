@@ -21,8 +21,8 @@ os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = "/home/dharshansri2007/lenz/backe
 # ------------------------------------
 MODEL_NAME = os.getenv("GEMINI_COPILOT_MODEL", "gemini-2.5-pro")
 
-HEAT_ENGINE_URL = os.getenv("HEAT_ENGINE_URL", "http://localhost:8001").rstrip("/")
-WATER_ENGINE_URL = os.getenv("WATER_ENGINE_URL", "http://localhost:8002").rstrip("/")
+HEAT_ENGINE_URL = os.getenv("HEAT_ENGINE_URL", "http://localhost:8002").rstrip("/")
+WATER_ENGINE_URL = os.getenv("WATER_ENGINE_URL", "http://localhost:8001").rstrip("/")
 CONTINUITY_ENGINE_URL = os.getenv("CONTINUITY_ENGINE_URL", "http://localhost:8003").rstrip("/")
 COLOCATION_ENGINE_URL = os.getenv("COLOCATION_ENGINE_URL", "http://localhost:8004").rstrip("/")
 
@@ -249,11 +249,18 @@ Recent memory:
         temperature=0.2,
     )
 
-    first = client.models.generate_content(
-        model=MODEL_NAME,
-        contents=[system_prompt, payload.prompt],
-        config=config,
-    )
+    try:
+        first = client.models.generate_content(
+            model=MODEL_NAME,
+            contents=[system_prompt, payload.prompt],
+            config=config,
+        )
+    except Exception as e:
+        return {
+            "answer": "Copilot generated in offline mode (Gemini API unreachable).",
+            "tool_results": [],
+            "model": MODEL_NAME,
+        }
 
     tool_results: List[Dict[str, Any]] = []
 
