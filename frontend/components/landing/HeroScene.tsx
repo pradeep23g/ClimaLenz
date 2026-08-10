@@ -61,7 +61,6 @@ export default function HeroScene() {
 
   return (
     <header className="hero" id="hero">
-      {/* ─── STRICT WRAPPER: No Tailwind Width Hacks ───────────── */}
       <div className="wrap">
         <div className="hero-grid">
           
@@ -114,7 +113,7 @@ export default function HeroScene() {
               initial={reducedMotion ? false : { opacity: 0, y: 18 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8, delay: 0.4, ease: [0.16, 1, 0.3, 1] }}
-              className="mt-8 flex flex-wrap items-center gap-4"
+              className="hero-cta-group"
             >
               <Link href="/dashboard" className="btn btn-primary group">
                 Launch Planner <ArrowRight className="w-4 h-4 arrow" />
@@ -133,9 +132,9 @@ export default function HeroScene() {
               initial={reducedMotion ? false : { opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ duration: 0.6, delay: 0.7 }}
-              className="hero-proof muted label-mono"
+              className="hero-proof-text"
             >
-              Sentinel-2 driven <span className="sep">·</span> ISRO MOSDAC grounded <span className="sep">·</span> Agentic execution
+              Sentinel-2 driven <span className="sep">·</span> Physics grounded <span className="sep">·</span> Agentic execution
             </motion.div>
           </div>
 
@@ -143,7 +142,6 @@ export default function HeroScene() {
           <div className="globe-stage">
             <canvas ref={canvasRef} className="globe-canvas" />
 
-            {/* Native CSS HUD Corners */}
             <div className="globe-hud">
               <span className="hud-corner tl" />
               <span className="hud-corner tr" />
@@ -151,7 +149,6 @@ export default function HeroScene() {
               <span className="hud-corner br" />
             </div>
 
-            {/* Native CSS Readout Overlay */}
             <div className="globe-readout">
               <div className="gr-row">
                 <span 
@@ -169,14 +166,13 @@ export default function HeroScene() {
                 <span id="gr-count">{deployStatus === "active" ? "07" : "00"}</span>
                 <span className="gr-of">/ active AOIs</span>
               </div>
-              <div className="gr-meta">HQ CHENNAI · ISRO TELEMETRY · SENTINEL MESH</div>
+              <div className="gr-meta">HQ CHENNAI · GLOBAL TELEMETRY · SENTINEL MESH</div>
             </div>
           </div>
 
         </div>
       </div>
 
-      {/* Native CSS Scroll Cue */}
       <div aria-hidden className="hero-scrollcue">
         <span className="label-mono" style={{ fontSize: "10px" }}>scroll</span>
         <span className="cue-line" />

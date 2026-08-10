@@ -1,16 +1,20 @@
 import HeroScene from "../components/landing/HeroScene";
 import DotMatrix from "../components/design/dot-matrix";
+import MechanismStack from "../components/landing/MechanismStack";
+import ContinuitySlider from "../components/landing/ContinuitySlider";
 
 export default function LandingPage() {
   return (
     <>
-      {/* The active telemetry background */}
       <DotMatrix />
-      
-      {/* The 3D Globe and Headline */}
       <HeroScene />
       
-      {/* We will build the Mechanism Stack & Evidence Rows and drop them here next */}
+      <MechanismStack />
+      
+      {/* Continuity Engine Interactive Demo */}
+      <div className="wrap relative z-10">
+        <ContinuitySlider />
+      </div>
     </>
   );
 }
