@@ -1,14 +1,32 @@
 from __future__ import annotations
 
 from datetime import date
+import shapely.geometry
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator, field_validator
 
 
 class ReconstructionRequest(BaseModel):
     geometry: dict = Field(..., description="GeoJSON Polygon for the AOI.")
     start_date: date
     end_date: date
+
+    @model_validator(mode='after')
+    def check_dates(self) -> ReconstructionRequest:
+        if self.start_date > self.end_date:
+            raise ValueError("start_date cannot be after end_date")
+        return self
+
+    @field_validator('geometry')
+    @classmethod
+    def check_geometry(cls, v: dict):
+        try:
+            geom = shapely.geometry.shape(v)
+            if not geom.is_valid:
+                raise ValueError("Provided geometry is not a valid polygon.")
+        except Exception as e:
+            raise ValueError(f"Invalid GeoJSON: {e}")
+        return v
 
 
 class ReconstructionResponse(BaseModel):
