@@ -343,13 +343,13 @@ Return JSON:
         temperature=0.0,
         response_mime_type="application/json",
     )
-    resp = _client.models.generate_content(
-        model=CRITIC_MODEL,
-        contents=prompt,
-        config=config,
-    )
-    raw = resp.text or "{}"
     try:
+        resp = _client.models.generate_content(
+            model=CRITIC_MODEL,
+            contents=prompt,
+            config=config,
+        )
+        raw = resp.text or "{}"
         parsed = json.loads(raw)
         claims = [
             UnsupportedClaim(
@@ -361,8 +361,8 @@ Return JSON:
         ]
         notes = str(parsed.get("notes", "")).strip() or None
         return True, notes, claims
-    except Exception:
-        return True, "LLM audit response parse failed; ignored.", []
+    except Exception as e:
+        return True, f"LLM audit failed or unavailable ({e}); ignored.", []
 
 
 def _compute_score(

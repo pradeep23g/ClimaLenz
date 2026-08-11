@@ -196,7 +196,7 @@ def run_tests():
         "spatial_geometry": sample_geometry,
         "bbox": sample_bbox,
         "intervention_type": "COOL_ROOF",
-        "delta": 20.0,
+        "delta": 1.8,
         "cloud_tolerance_pct": 30.0,
     }
     resp3 = requests.post("http://127.0.0.1:8000/v1/colocation/assess", json=payload_3)
