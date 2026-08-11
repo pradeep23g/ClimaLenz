@@ -3,24 +3,51 @@
 import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, GripVertical } from "lucide-react";
+import { motion } from "framer-motion";
 
 export default function ContinuitySlider() {
-  const [activeLayer, setActiveLayer] = useState<0 | 1 | 2>(1); // Default to UNet
+  // Slider position (0 to 100%)
+  const [sliderPos, setSliderPos] = useState(50);
+  
+  // The right-hand side is mode-selectable
+  const [activeRightLayer, setActiveRightLayer] = useState<1 | 2 | 3>(1);
 
-  const layers = [
-    { id: 0, name: "Cloud Blind (Input)", src: "/images/1000067135.png" },
-    { id: 1, name: "UNet Repaired", src: "/images/1000067136.png" },
-    { id: 2, name: "Ground Truth", src: "/images/1000067137.png" }
+  // Left Side (Always Input)
+  const inputLayer = { name: "Cloud Blind (Input)", src: "/images/1000067135.png" };
+
+  // Right Side Options
+  const rightLayers = [
+    { id: 1, name: "UNet Repaired", src: "/images/1000067136.png", highlight: "var(--cobalt-bright)" },
+    { id: 2, name: "Confidence Heatmap", src: "/images/1000067140.png", highlight: "var(--gold)" },
+    { id: 3, name: "Ground Truth", src: "/images/1000067137.png", highlight: "var(--good)" }
   ];
 
+  const currentRight = rightLayers.find(layer => layer.id === activeRightLayer)!;
+
   return (
-    <div className="cs-wrapper">
+    <motion.div 
+      className="cs-wrapper"
+      initial={{ opacity: 0, y: 60 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: false, amount: 0.15 }}
+      transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+    >
       
+      {/* ─── NEW: Transition Heading to fill the gap ─── */}
+      <div style={{ textAlign: "center", marginBottom: "100px", marginTop: "40px" }}>
+        <div style={{ fontFamily: "var(--mono)", fontSize: "11px", letterSpacing: "0.2em", color: "var(--text-3)", textTransform: "uppercase", marginBottom: "10px" }}>
+          Validating the boundary
+        </div>
+        <h2 style={{ fontFamily: "var(--sans)", fontSize: "clamp(36px, 5vw, 56px)", fontWeight: 600, color: "var(--text)", letterSpacing: "-0.02em", lineHeight: 1.1 }}>
+          Inside the <em style={{ fontFamily: "var(--serif)", color: "var(--cobalt-bright)", fontStyle: "italic", fontWeight: 400 }}>Engines.</em>
+        </h2>
+      </div>
+
       {/* Header Info */}
       <div className="cs-header">
         <div className="cs-title-wrap">
-          <h3 style={{ fontFamily: "var(--mono)", fontSize: "12px", letterSpacing: "0.1em", color: "var(--cobalt-bright)", marginBottom: "10px" }}>
+          <h3 style={{ fontFamily: "var(--mono)", fontSize: "12px", letterSpacing: "0.1em", color: "var(--cobalt-bright)", marginBottom: "8px" }}>
             ● LAYER 00 : CONTINUITY ENGINE
           </h3>
           <p style={{ fontFamily: "var(--sans)", fontSize: "24px", color: "var(--text)", fontWeight: 500 }}>
@@ -37,32 +64,68 @@ export default function ContinuitySlider() {
         </div>
       </div>
 
-      {/* The Image Container */}
+      {/* The Interactive Comparison Stage */}
       <div className="cs-image-box">
-        <Image
-          src={layers[activeLayer].src}
-          alt={layers[activeLayer].name}
-          fill
-          style={{ objectFit: "cover" }}
-          unoptimized
-        />
         
-        {/* Top-left Indicator */}
-        <div className="cs-badge">
-          VIEW: {layers[activeLayer].name.toUpperCase()}
+        {/* Background Image: The Selectable Output (Right Side) */}
+        <div className="absolute inset-0">
+          <Image
+            src={currentRight.src}
+            alt={currentRight.name}
+            fill
+            unoptimized
+          />
         </div>
+
+        {/* Foreground Image: The Input (Left Side) - Clipped dynamically by the slider */}
+        <div 
+          className="absolute inset-0 z-10"
+          style={{ clipPath: `polygon(0 0, ${sliderPos}% 0, ${sliderPos}% 100%, 0 100%)` }}
+        >
+          <Image
+            src={inputLayer.src}
+            alt={inputLayer.name}
+            fill
+            unoptimized
+          />
+        </div>
+
+        {/* Interactive UI: Labels */}
+        <div className="cs-label left">
+          {inputLayer.name}
+        </div>
+        <div className="cs-label right" style={{ borderBottom: `2px solid ${currentRight.highlight}` }}>
+          {currentRight.name}
+        </div>
+
+        {/* Interactive UI: Slider Divider & Handle */}
+        <div className="cs-divider" style={{ left: `${sliderPos}%` }}>
+          <div className="cs-handle">
+            <GripVertical className="w-4 h-4" />
+          </div>
+        </div>
+
+        {/* Invisible HTML5 Range Input overlay to capture native dragging/touch */}
+        <input
+          type="range"
+          min="0"
+          max="100"
+          value={sliderPos}
+          onChange={(e) => setSliderPos(Number(e.target.value))}
+          className="cs-slider-input"
+        />
       </div>
 
       {/* Controls & CTA Row */}
       <div className="cs-controls">
         
-        {/* 3-Way Toggle Switch */}
+        {/* Right-Side Layer Toggles */}
         <div className="cs-toggle">
-          {layers.map((layer) => (
+          {rightLayers.map((layer) => (
             <button
               key={layer.id}
-              onClick={() => setActiveLayer(layer.id as 0 | 1 | 2)}
-              className={activeLayer === layer.id ? "active" : ""}
+              onClick={() => setActiveRightLayer(layer.id as 1 | 2 | 3)}
+              className={activeRightLayer === layer.id ? "active" : ""}
             >
               {layer.name}
             </button>
@@ -76,6 +139,6 @@ export default function ContinuitySlider() {
         </Link>
       </div>
 
-    </div>
+    </motion.div>
   );
 }
