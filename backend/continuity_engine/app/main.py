@@ -6,10 +6,22 @@ from fastapi import FastAPI, HTTPException, status
 
 from app.models.reconstruction_schemas import ReconstructionRequest, ReconstructionResponse
 from app.pipeline import run_reconstruction
+from app.services.model_loader import load_repair_model
 from app.services.satellite.base import ContinuityDataError, NoUsableSceneError
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+
+import torch
+from contextlib import asynccontextmanager
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    torch.set_num_threads(2)
+    logger.info("Loading CloudRepairUNet model weights at startup...")
+    load_repair_model()
+    yield
+
 
 app = FastAPI(
     title="ClimaLenz Continuity Engine (Layer 0)",
@@ -20,6 +32,7 @@ app = FastAPI(
         "are as trustworthy as observed ones."
     ),
     version="0.1.0",
+    lifespan=lifespan,
 )
 
 

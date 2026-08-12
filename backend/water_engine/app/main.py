@@ -95,5 +95,5 @@ def generate_assessment(payload: AssessmentPayload) -> EnvironmentalPipelineRepo
         logger.exception("Catastrophic pipeline failure.")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="An internal computational error occurred during the risk assessment."
+            detail=f"An internal computational error occurred during the risk assessment: {str(generic_err)}"
         )

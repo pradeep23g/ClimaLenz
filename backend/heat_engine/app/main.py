@@ -12,10 +12,26 @@ from app.services.satellite.client_factory import resolve_thermal_client
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+import torch
+from contextlib import asynccontextmanager
+from app.services.model_loader import load_pinn, load_baseline
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    torch.set_num_threads(2)
+    logger.info("Loading PINN model weights at startup...")
+    load_pinn()
+    try:
+        load_baseline()
+    except Exception as e:
+        logger.warning(f"Baseline model unavailable at startup: {e}")
+    yield
+
 app = FastAPI(
     title="ClimaLenz Heat Engine API",
     description="Physics-informed urban heat intervention simulator (PINN + thermodynamic guardrail).",
     version="1.0.0",
+    lifespan=lifespan,
 )
 
 

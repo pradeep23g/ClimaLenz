@@ -102,8 +102,8 @@ def execute_environmental_pipeline(
         )
     except Exception as exc:
         logger.warning(f"Live satellite gateway failed ({exc}). Falling back to synthetic provider.")
-        from app.services.satellite.synthetic_provider import SyntheticDualProvider
-        client = SyntheticDualProvider()
+        from app.services.satellite.synthetic_client import SyntheticObservationClient
+        client = SyntheticObservationClient()
         observation_context = client.retrieve_scene(
             spatial_bounds=spatial_geometry,
             search_start=query_start_date,

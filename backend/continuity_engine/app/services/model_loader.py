@@ -12,6 +12,9 @@ from pathlib import Path
 ARTIFACTS_DIR = Path(__file__).parent.parent.parent / "artifacts"
 
 
+import functools
+
+@functools.lru_cache(maxsize=1)
 def load_repair_model(filename: str = "cloud_repair_unet.pt"):
     import torch
 

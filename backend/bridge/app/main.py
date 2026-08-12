@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import logging
+import time
 
 import httpx
 from fastapi import FastAPI, HTTPException, status
@@ -42,6 +43,9 @@ def assess_colocation(payload: CoLocationRequest) -> CoLocationReport:
     consistently for now. Reconciling that into a single AOI input format
     is a reasonable follow-up once this end-to-end path is proven.
     """
+    t_start = time.time()
+
+    t_water_0 = time.time()
     try:
         water_report = fetch_water_assessment(
             payload.spatial_geometry,
@@ -59,7 +63,9 @@ def assess_colocation(payload: CoLocationRequest) -> CoLocationReport:
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             detail=f"Could not reach water_engine: {err}",
         )
+    water_engine_s = round(time.time() - t_water_0, 4)
 
+    t_heat_0 = time.time()
     try:
         heat_result = fetch_heat_simulation(
             payload.bbox, payload.intervention_type, payload.delta
@@ -76,6 +82,7 @@ def assess_colocation(payload: CoLocationRequest) -> CoLocationReport:
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             detail=f"Could not reach heat_engine: {err}",
         )
+    heat_engine_s = round(time.time() - t_heat_0, 4)
 
     try:
         result = evaluate_colocation(water_report, heat_result)
@@ -85,5 +92,12 @@ def assess_colocation(payload: CoLocationRequest) -> CoLocationReport:
             status_code=status.HTTP_502_BAD_GATEWAY,
             detail=f"Unexpected response shape from an engine, missing field: {err}",
         )
+
+    total_s = round(time.time() - t_start, 4)
+    result["stage_timings"] = {
+        "water_engine_s": water_engine_s,
+        "heat_engine_s": heat_engine_s,
+        "total_s": total_s,
+    }
 
     return CoLocationReport(**result)

@@ -1,0 +1,19 @@
+{
+  "optical_scene_id": "S2B_MSIL2A_20260112T051059_R019_T43PGQ_20260112T073848",
+  "sar_scene_id": "S1A_IW_GRDH_1SDV_20260111T004014_20260111T004039_062712_07DD09_rtc",
+  "provider": "microsoft-planetary-computer-dual",
+  "capture_date": "2026-01-12T05:10:59.024000+00:00",
+  "original_cloud_cover_pct": 100.0,
+  "scene_confidence": 0.026983793824911118,
+  "reconstructed_fraction": 1.0,
+  "low_confidence_fraction": 1.0,
+  "caveats": [
+    "100% of this scene was cloud-affected and reconstructed, not directly observed.",
+    "100% of the scene falls below the 0.4 confidence threshold \u2014 treat any risk score computed over this area as a low-confidence estimate, not a reliable reading."
+  ],
+  "reconstructed_bands_shape": [
+    6,
+    23,
+    23
+  ]
+}
