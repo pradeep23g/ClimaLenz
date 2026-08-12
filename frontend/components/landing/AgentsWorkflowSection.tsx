@@ -1,72 +1,201 @@
-import { Search, FileText, MessagesSquare } from "lucide-react";
-import TacticalCard from "@/components/design/TacticalCard";
-import Reveal from "@/components/design/Reveal";
-import { StaggerReveal } from "@/components/design/ScrollReveal";
+"use client";
 
-const AGENTS = [
-  {
-    number: "01",
-    title: "Historian",
-    desc:
-      "google_search grounding — cross-references the engines' computed risk score against real, recent local news (flooding reports, drought coverage, municipal projects) near the AOI.",
-    icon: Search,
-    color: "cobalt" as const,
-    statusCode: "GROUNDING_OK",
-  },
-  {
-    number: "02",
-    title: "Reporter",
-    desc:
-      "response_schema — translates pre-computed, pre-guardrailed JSON into a citizen or executive brief. Never recomputes a number: this is the zero-risk seam.",
-    icon: FileText,
-    color: "gold" as const,
-    statusCode: "SCHEMA_LOCKED",
-  },
-  {
-    number: "03",
-    title: "Co-pilot",
-    desc:
-      "function calling — conversational front-end that parses natural language and calls the actual engine endpoints (heat what-if, water assessment, continuity repair, co-location) directly.",
-    icon: MessagesSquare,
-    color: "good" as const,
-    statusCode: "AGENT_LIVE",
-  },
-];
+import { useState, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { FileText, Clock, Compass, ShieldCheck, Terminal, Cpu } from "lucide-react";
 
 export default function AgentsWorkflowSection() {
-  return (
-    <section id="agents" className="section divider-top">
-      <div className="container-lenz">
-        <Reveal>
-          <h2
-            className="text-3xl sm:text-4xl font-semibold tracking-tight mb-3"
-            style={{ color: "var(--text)" }}
-          >
-            Four agents. Zero computed hallucinations.
-          </h2>
-          <p
-            className="text-base mb-14 max-w-xl"
-            style={{ color: "var(--text-3)" }}
-          >
-            Every number on screen comes from a deterministic engine. The
-            agents only read, translate, and act on it — never recompute it.
-          </p>
-        </Reveal>
+  // ============================================================================
+  // AGENT STATE MACHINE
+  // ============================================================================
+  const [activeStep, setActiveStep] = useState(0);
 
-        <StaggerReveal className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {AGENTS.map((a) => (
-            <TacticalCard
-              key={a.number}
-              number={a.number}
-              title={a.title}
-              desc={a.desc}
-              icon={a.icon}
-              color={a.color}
-              statusCode={a.statusCode}
-            />
-          ))}
-        </StaggerReveal>
+  // Auto-cycle through the agents to simulate the live workflow
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setActiveStep((prev) => (prev + 1) % 4);
+    }, 4000); // 4 seconds per agent step
+    return () => clearInterval(interval);
+  }, []);
+
+  // ============================================================================
+  // AGENT DATA CONFIG
+  // ============================================================================
+  const agents = [
+    {
+      id: "reporter",
+      name: "The Reporter",
+      role: "Telemetry Ingestion Agent",
+      icon: <FileText className="w-5 h-5" />,
+      description: "Ingests raw deterministic arrays from the Water and Heat engines and parses them into natural language state summaries.",
+      logs: [
+        "> Fetching Layer 01 & 02 tensors...",
+        "> NDCI anomaly detected: 0.84",
+        "> Compiling baseline status report [DONE]"
+      ]
+    },
+    {
+      id: "historian",
+      name: "The Historian",
+      role: "Context Retrieval Agent",
+      icon: <Clock className="w-5 h-5" />,
+      description: "Queries the vector database for historical ecological patterns, establishing a temporal baseline for the current anomalies.",
+      logs: [
+        "> Querying vector DB: temporal bounds (2020-2025)",
+        "> Matched 3 similar high-risk events.",
+        "> Contextualizing current deviation [DONE]"
+      ]
+    },
+    {
+      id: "copilot",
+      name: "The Co-Pilot",
+      role: "Strategic Action Agent",
+      icon: <Compass className="w-5 h-5" />,
+      description: "Synthesizes the Report and History into actionable, ground-level mitigation strategies for policymakers and deployment teams.",
+      logs: [
+        "> Synthesizing policy recommendations...",
+        "> Draft: 'Deploy filtration to Sector 4'",
+        "> Generating emergency response protocol [DONE]"
+      ]
+    },
+    {
+      id: "auditor",
+      name: "Honest AI (Auditor)",
+      role: "Zero-Hallucination Verifier",
+      icon: <ShieldCheck className="w-5 h-5" />,
+      description: "The final gatekeeper. Cross-references every word generated by the Co-Pilot against the raw engine math. If it isn't in the data, it gets purged.",
+      logs: [
+        "> Initiating semantic verification...",
+        "> Claim 'Sector 4 filtration' -> Validated via NDTI.",
+        "> PASS: Output is 100% deterministically grounded."
+      ]
+    }
+  ];
+
+  return (
+    <motion.section 
+      className="aw-wrapper"
+      initial={{ opacity: 0, y: 80 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: false, amount: 0.15 }}
+      transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+    >
+      <div className="aw-layout">
+        
+        {/* ─── LEFT COLUMN: THE NARRATIVE ─── */}
+        <div className="aw-left relative z-10">
+          <div className="flex items-center gap-3 mb-6">
+            <span className="w-2 h-2 rounded-full bg-[var(--cobalt-bright)] animate-pulse" style={{ boxShadow: "0 0 10px var(--cobalt-glow)" }} />
+            <h3 style={{ fontFamily: "var(--mono)", fontSize: "12px", letterSpacing: "0.1em", color: "var(--cobalt-bright)", textTransform: "uppercase" }}>
+              Layer 03 : Agentic Bridge
+            </h3>
+          </div>
+          
+          <h2 style={{ fontFamily: "var(--sans)", fontSize: "clamp(36px, 5vw, 56px)", fontWeight: 600, color: "var(--text)", letterSpacing: "-0.03em", lineHeight: 1.05, marginBottom: "24px" }}>
+            Four Gemini agents.<br />
+            <em style={{ fontFamily: "var(--serif)", color: "var(--cobalt-bright)", fontStyle: "italic", fontWeight: 400 }}>One audited workflow.</em>
+          </h2>
+          
+          <p style={{ color: "var(--text-2)", fontSize: "16px", lineHeight: 1.7, maxWidth: "480px", marginBottom: "32px" }}>
+            LLMs are brilliant communicators, but notorious liars. If a platform relies on a single prompt to generate climate warnings, it will inevitably hallucinate. 
+          </p>
+          <p style={{ color: "var(--text-2)", fontSize: "16px", lineHeight: 1.7, maxWidth: "480px", marginBottom: "40px" }}>
+            ClimaLenz fixes this with a strictly governed multi-agent architecture powered by Gemini 2.5 Pro. Data flows through a gauntlet of specialized agents, culminating in a ruthless final audit by the Honest AI verifier to guarantee every statement is backed by hard math.
+          </p>
+
+          <div style={{ display: "flex", gap: "32px", borderTop: "1px solid var(--line)", paddingTop: "32px" }}>
+            <div>
+              <div style={{ fontFamily: "var(--sans)", fontSize: "28px", color: "var(--text)", fontWeight: 600, letterSpacing: "-0.02em" }}>Gemini 2.5 Pro</div>
+              <div style={{ fontFamily: "var(--mono)", fontSize: "10px", color: "var(--text-4)", textTransform: "uppercase", letterSpacing: "0.1em", marginTop: "4px" }}>Model Backbone</div>
+            </div>
+            <div>
+              <div style={{ fontFamily: "var(--sans)", fontSize: "28px", color: "var(--good)", fontWeight: 600, letterSpacing: "-0.02em" }}>Strict</div>
+              <div style={{ fontFamily: "var(--mono)", fontSize: "10px", color: "var(--text-4)", textTransform: "uppercase", letterSpacing: "0.1em", marginTop: "4px" }}>Verification Mode</div>
+            </div>
+          </div>
+        </div>
+
+        {/* ─── RIGHT COLUMN: THE AGENTIC PIPELINE ─── */}
+        <div className="aw-right">
+          
+          {/* Connecting line behind the cards */}
+          <div className="aw-connector" />
+
+          {agents.map((agent, idx) => {
+            const isActive = activeStep === idx;
+            const isPast = idx < activeStep;
+            
+            return (
+              <div 
+                key={agent.id} 
+                className={`aw-agent-card ${isActive ? "active" : ""}`}
+                style={{ opacity: isPast || isActive ? 1 : 0.4 }}
+              >
+                <div className="aw-agent-icon">
+                  {agent.icon}
+                </div>
+                
+                <div style={{ flex: 1 }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "8px" }}>
+                    <div>
+                      <div style={{ fontFamily: "var(--sans)", fontSize: "16px", fontWeight: 600, color: "var(--text)" }}>
+                        {agent.name}
+                      </div>
+                      <div style={{ fontFamily: "var(--mono)", fontSize: "10px", color: isActive ? "var(--cobalt-bright)" : "var(--text-4)", textTransform: "uppercase", letterSpacing: "0.05em", marginTop: "2px", transition: "color 0.3s" }}>
+                        {agent.role}
+                      </div>
+                    </div>
+                    
+                    {/* Status Badge */}
+                    <div style={{ 
+                      fontFamily: "var(--mono)", fontSize: "9px", padding: "4px 8px", borderRadius: "4px", textTransform: "uppercase", letterSpacing: "0.1em",
+                      backgroundColor: isActive ? "rgba(43, 90, 194, 0.1)" : isPast ? "rgba(63, 125, 82, 0.1)" : "var(--surface-2)",
+                      color: isActive ? "var(--cobalt-bright)" : isPast ? "var(--good)" : "var(--text-4)",
+                      border: `1px solid ${isActive ? "var(--cobalt)" : isPast ? "rgba(63, 125, 82, 0.3)" : "var(--line)"}`
+                    }}>
+                      {isActive ? "Processing" : isPast ? "Complete" : "Pending"}
+                    </div>
+                  </div>
+                  
+                  <p style={{ color: "var(--text-3)", fontSize: "13px", lineHeight: 1.5 }}>
+                    {agent.description}
+                  </p>
+
+                  {/* Terminal Log Simulation (Only visible when active or past) */}
+                  <AnimatePresence>
+                    {(isActive || isPast) && (
+                      <motion.div 
+                        initial={{ height: 0, opacity: 0, marginTop: 0 }}
+                        animate={{ height: "auto", opacity: 1, marginTop: 12 }}
+                        className="aw-agent-terminal"
+                      >
+                        <div style={{ display: "flex", gap: "6px", alignItems: "center", marginBottom: "6px", color: "var(--text-3)" }}>
+                          <Terminal size={12} /> <span>System Logs:</span>
+                        </div>
+                        {agent.logs.map((log, logIdx) => (
+                          <motion.div 
+                            key={logIdx}
+                            initial={{ opacity: 0, x: -5 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            transition={{ delay: isActive ? logIdx * 1 : 0 }}
+                            style={{ 
+                              color: log.includes("PASS") || log.includes("[DONE]") ? "var(--good)" : log.includes("WARNING") ? "var(--over)" : "var(--text-4)",
+                              marginBottom: "4px"
+                            }}
+                          >
+                            {log}
+                          </motion.div>
+                        ))}
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+
+                </div>
+              </div>
+            );
+          })}
+        </div>
       </div>
-    </section>
+    </motion.section>
   );
 }

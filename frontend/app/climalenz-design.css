@@ -1158,3 +1158,289 @@
   }
 }
 
+/* ============================================================================
+   LAYER 03: AGENTIC WORKFLOW SECTION
+   ========================================================================== */
+.climalenz-design .aw-wrapper {
+  width: 100%;
+  max-width: 1240px;
+  margin: 0 auto;
+  padding: 120px clamp(20px, 5vw, 80px);
+}
+
+.climalenz-design .aw-layout {
+  display: flex;
+  flex-direction: column;
+  gap: 64px;
+}
+@media (min-width: 1024px) {
+  .climalenz-design .aw-layout {
+    flex-direction: row;
+    align-items: center;
+  }
+}
+
+.climalenz-design .aw-left {
+  flex: 1;
+  width: 100%;
+}
+
+.climalenz-design .aw-right {
+  flex: 1;
+  width: 100%;
+  max-width: 600px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  position: relative;
+}
+
+/* Agent Card Styles */
+.climalenz-design .aw-agent-card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  padding: 20px;
+  display: flex;
+  gap: 20px;
+  align-items: flex-start;
+  position: relative;
+  overflow: hidden;
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.climalenz-design .aw-agent-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; width: 4px; height: 100%;
+  background: var(--line);
+  transition: background 0.4s ease;
+}
+
+.climalenz-design .aw-agent-card.active {
+  background: var(--surface-2);
+  border-color: var(--line-2);
+  box-shadow: var(--shadow-2);
+  transform: translateX(8px);
+}
+
+.climalenz-design .aw-agent-card.active::before {
+  background: var(--cobalt-bright);
+  box-shadow: 0 0 12px var(--cobalt-glow);
+}
+
+.climalenz-design .aw-agent-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  background: #000;
+  border: 1px solid var(--line);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-3);
+  transition: all 0.4s ease;
+}
+
+.climalenz-design .aw-agent-card.active .aw-agent-icon {
+  color: var(--cobalt-bright);
+  border-color: var(--cobalt);
+}
+
+/* Terminal typing effect inside the card */
+.climalenz-design .aw-agent-terminal {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--text-4);
+  background: #000;
+  padding: 12px;
+  border-radius: 6px;
+  border: 1px solid var(--line);
+  margin-top: 12px;
+  line-height: 1.5;
+  height: 60px;
+  overflow: hidden;
+}
+
+.climalenz-design .aw-connector {
+  position: absolute;
+  left: 24px;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: var(--line);
+  z-index: -1;
+}
+
+/* ============================================================================
+   OPEN DATA & TECH MARQUEE SECTION
+   ========================================================================== */
+.climalenz-design .tm-wrapper {
+  width: 100%;
+  padding: 100px 0;
+  position: relative;
+  overflow: hidden;
+  background: var(--surface);
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+}
+
+.climalenz-design .tm-header {
+  text-align: center;
+  margin-bottom: 48px;
+  padding: 0 20px;
+}
+
+.climalenz-design .tm-marquee-container {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  width: 100%;
+  overflow: hidden;
+  user-select: none;
+  /* Smoothly fade the marquee items at the monitor edges */
+  mask-image: linear-gradient(to right, transparent, black 15%, black 85%, transparent);
+  -webkit-mask-image: linear-gradient(to right, transparent, black 15%, black 85%, transparent);
+}
+
+.climalenz-design .tm-track-wrap {
+  display: flex;
+  width: max-content;
+}
+
+.climalenz-design .tm-track {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  padding-right: 16px;
+  animation: tm-scroll-left 40s linear infinite;
+}
+
+.climalenz-design .tm-track.reverse {
+  animation: tm-scroll-right 45s linear infinite;
+}
+
+.climalenz-design .tm-marquee-container:hover .tm-track {
+  animation-play-state: paused;
+}
+
+.climalenz-design .tm-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 20px;
+  background: #000;
+  border: 1px solid var(--line);
+  border-radius: 9999px;
+  white-space: nowrap;
+  font-family: var(--mono);
+  font-size: 12px;
+  letter-spacing: 0.05em;
+  color: var(--text-2);
+  transition: all 0.3s ease;
+}
+
+.climalenz-design .tm-item:hover {
+  border-color: var(--cobalt-bright);
+  color: #fff;
+  box-shadow: 0 0 20px var(--cobalt-glow);
+  transform: translateY(-2px);
+}
+
+.climalenz-design .tm-category {
+  font-size: 10px;
+  color: var(--text-4);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  padding-left: 6px;
+  border-left: 1px solid var(--line);
+}
+
+@keyframes tm-scroll-left {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+@keyframes tm-scroll-right {
+  0% { transform: translateX(-50%); }
+  100% { transform: translateX(0); }
+}
+
+/* ============================================================================
+   FINAL CTA SECTION
+   ========================================================================== */
+.climalenz-design .cta-wrapper {
+  width: 100%;
+  max-width: 1240px;
+  margin: 0 auto;
+  padding: 100px clamp(20px, 5vw, 80px) 140px;
+}
+
+.climalenz-design .cta-card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  padding: clamp(40px, 6vw, 72px);
+  position: relative;
+  overflow: hidden;
+  box-shadow: var(--shadow-2);
+}
+
+.climalenz-design .cta-card::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  right: -10%;
+  width: 400px;
+  height: 400px;
+  background: radial-gradient(circle, rgba(43, 90, 194, 0.15) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+.climalenz-design .cta-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  align-items: center;
+}
+
+.climalenz-design .cta-btn-primary {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 14px 28px;
+  border-radius: 8px;
+  background: var(--cobalt-bright);
+  color: #fff;
+  font-family: var(--sans);
+  font-size: 14px;
+  font-weight: 500;
+  text-decoration: none;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 16px rgba(43, 90, 194, 0.25);
+}
+.climalenz-design .cta-btn-primary:hover {
+  background: var(--cobalt);
+  transform: translateY(-2px);
+}
+
+.climalenz-design .cta-btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 14px 28px;
+  border-radius: 8px;
+  background: #000;
+  color: var(--text);
+  border: 1px solid var(--line);
+  font-family: var(--sans);
+  font-size: 14px;
+  font-weight: 500;
+  text-decoration: none;
+  transition: all 0.3s ease;
+}
+.climalenz-design .cta-btn-secondary:hover {
+  border-color: var(--cobalt-bright);
+  color: #fff;
+  transform: translateY(-2px);
+}
