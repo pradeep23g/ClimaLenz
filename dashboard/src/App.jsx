@@ -1,6 +1,6 @@
 /**
  * App Component
- * Climalenz Web Application - Panimalar Hackathon Edition
+ * Climalenz Web Application
  * High-Density Dark GIS Climate Analytics Platform (AquaLens AI Architecture)
  */
 import React, { useState } from 'react';
@@ -47,6 +47,7 @@ export default function App() {
   } = useClimalenzData('mumbai');
 
   const [activeZone, setActiveZone] = useState(null);
+  const [isConfigPanelCollapsed, setIsConfigPanelCollapsed] = useState(false);
 
   // If viewMode is 'homepage', render the Landing Homepage first (Image 3 reference)
   if (viewMode === 'homepage') {
@@ -188,6 +189,8 @@ export default function App() {
           satelliteSources={satelliteSources}
           coefficients={coefficients}
           handleCoefficientChange={handleCoefficientChange}
+          isCollapsed={isConfigPanelCollapsed}
+          onToggleCollapse={() => setIsConfigPanelCollapsed((collapsed) => !collapsed)}
         />
 
       </div>

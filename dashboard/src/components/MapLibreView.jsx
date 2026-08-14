@@ -5,9 +5,9 @@
  * floating AOI buffer card, location search bar (Nominatim geocoding), and basemap toggles.
  */
 import React, { useEffect, useRef, useState } from 'react';
-import { Map, NavigationControl, Marker } from 'maplibre-gl';
+import { Map as MapLibreMap, NavigationControl, Marker } from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
-import { Search, MapPin, Layers, Plus, Minus, RefreshCw, CheckCircle2, Crosshair } from 'lucide-react';
+import { Search, MapPin, Layers, Check, X } from 'lucide-react';
 
 export const MapLibreView = ({
   city,
@@ -16,7 +16,8 @@ export const MapLibreView = ({
   activeZone,
   onSelectZone,
   livePredictions,
-  satelliteFeedNotice
+  satelliteFeedNotice,
+  showLayerControls = false
 }) => {
   const mapContainerRef = useRef(null);
   const mapRef = useRef(null);
@@ -26,6 +27,7 @@ export const MapLibreView = ({
   const [searchError, setSearchError] = useState(null);
   const [basemapStyle, setBasemapStyle] = useState('dark'); // 'dark' | 'street'
   const [currentCoords, setCurrentCoords] = useState({ lat: city.lat, lng: city.lng, name: city.name });
+  const [visibleLayers, setVisibleLayers] = useState({ heat: true, water: true, canopy: true });
 
   const darkStyleUrl = 'https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json';
   const streetStyleUrl = 'https://basemaps.cartocdn.com/gl/positron-gl-style/style.json';
@@ -34,7 +36,7 @@ export const MapLibreView = ({
   useEffect(() => {
     if (!mapContainerRef.current) return;
 
-    const map = new Map({
+    const map = new MapLibreMap({
       container: mapContainerRef.current,
       style: basemapStyle === 'dark' ? darkStyleUrl : streetStyleUrl,
       center: [currentCoords.lng, currentCoords.lat],
@@ -49,7 +51,7 @@ export const MapLibreView = ({
     map.addControl(new NavigationControl({ showCompass: true, showZoom: false }), 'top-right');
 
     map.on('load', () => {
-      // Add subtle microclimate heat layer (replacing ugly red dots)
+      // Add three independently-toggleable analytical layers for the executive map.
       if (city.thermalGrid && city.thermalGrid.length > 0) {
         const geojsonFeatures = city.thermalGrid.map(pt => ({
           type: 'Feature',
@@ -84,6 +86,32 @@ export const MapLibreView = ({
             'heatmap-radius': 28,
             'heatmap-opacity': 0.75
           }
+        });
+
+        map.addLayer({
+          id: 'hydrologic-deficits',
+          type: 'circle',
+          source: 'thermal-grid-src',
+          paint: {
+            'circle-radius': ['interpolate', ['linear'], ['get', 'intensity'], 0, 4, 1, 12],
+            'circle-color': '#22d3ee',
+            'circle-opacity': 0.22,
+            'circle-stroke-color': '#67e8f9',
+            'circle-stroke-width': 1,
+          },
+        });
+
+        map.addLayer({
+          id: 'canopy-cover',
+          type: 'circle',
+          source: 'thermal-grid-src',
+          paint: {
+            'circle-radius': ['interpolate', ['linear'], ['get', 'ndvi'], 0, 3, 0.8, 15],
+            'circle-color': '#34d399',
+            'circle-opacity': 0.2,
+            'circle-stroke-color': '#6ee7b7',
+            'circle-stroke-width': 1,
+          },
         });
       }
 
@@ -136,12 +164,36 @@ export const MapLibreView = ({
       new Marker({ element: markerEl })
         .setLngLat([currentCoords.lng, currentCoords.lat])
         .addTo(map);
+
+      map.resize();
     });
 
     return () => {
       map.remove();
     };
   }, [basemapStyle, city.id]);
+
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map) return;
+    const applyVisibility = () => {
+      const layerMap = { heat: 'thermal-heatmap', water: 'hydrologic-deficits', canopy: 'canopy-cover' };
+      Object.entries(layerMap).forEach(([key, layerId]) => {
+        if (map.getLayer(layerId)) map.setLayoutProperty(layerId, 'visibility', visibleLayers[key] ? 'visible' : 'none');
+      });
+    };
+    if (map.isStyleLoaded()) applyVisibility();
+    else map.once('load', applyVisibility);
+  }, [visibleLayers, basemapStyle, city.id]);
+
+  useEffect(() => {
+    const map = mapRef.current;
+    const container = mapContainerRef.current;
+    if (!map || !container || typeof ResizeObserver === 'undefined') return;
+    const observer = new ResizeObserver(() => map.resize());
+    observer.observe(container);
+    return () => observer.disconnect();
+  }, []);
 
   // Update map center when city changes
   useEffect(() => {
@@ -239,6 +291,25 @@ export const MapLibreView = ({
 
       {/* Map Container */}
       <div ref={mapContainerRef} className="w-full h-full min-h-[420px]" />
+
+      {showLayerControls && (
+        <div className="absolute right-3 top-16 z-20 flex flex-wrap justify-end gap-1.5">
+          {[
+            ['heat', 'Heat Hotspots', 'border-rose-400/50 bg-slate-950/90 text-rose-300'],
+            ['water', 'Hydrologic Deficits', 'border-cyan-400/50 bg-slate-950/90 text-cyan-300'],
+            ['canopy', 'Canopy Cover', 'border-emerald-400/50 bg-slate-950/90 text-emerald-300'],
+          ].map(([key, label, activeClass]) => (
+            <button
+              key={key}
+              type="button"
+              onClick={() => setVisibleLayers((current) => ({ ...current, [key]: !current[key] }))}
+              className={`flex items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-[10px] font-bold shadow-xl backdrop-blur-md transition ${visibleLayers[key] ? activeClass : 'border-slate-700 bg-slate-950/80 text-slate-500'}`}
+            >
+              {visibleLayers[key] ? <Check className="h-3 w-3" /> : <X className="h-3 w-3" />} {label}
+            </button>
+          ))}
+        </div>
+      )}
 
       {/* Search Error Alert */}
       {searchError && (

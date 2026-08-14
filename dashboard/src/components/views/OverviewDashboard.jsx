@@ -1,205 +1,51 @@
-/**
- * OverviewDashboard Component
- * Combined High-Level Executive Summary of all 5 Climalenz Engine Layers.
- */
 import React from 'react';
-import { 
-  Droplet, 
-  Flame, 
-  Activity, 
-  Network, 
-  Bot, 
-  ArrowRight, 
-  Globe, 
-  ShieldCheck 
-} from 'lucide-react';
+import { AlertTriangle, ArrowUpRight, Droplet, Flame, Gauge, Network, ShieldCheck, ThermometerSun, Trees, Waves } from 'lucide-react';
 import { MapLibreView } from '../MapLibreView';
 
-export const OverviewDashboard = ({
-  currentCity,
-  onLocationChange,
-  activeEngine,
-  setActiveEngine,
-  activeZone,
-  onSelectZone,
-  livePredictions,
-  pipelineStatus,
-  selectedSatellite
-}) => {
+const MetricCard = ({ icon: Icon, label, value, detail, tone, onClick }) => (
+  <button type="button" onClick={onClick} className={`min-w-0 rounded-2xl border border-slate-800 bg-slate-950/70 p-4 text-left shadow-xl transition hover:-translate-y-0.5 ${onClick ? `cursor-pointer ${tone.hover}` : ''}`}>
+    <div className="mb-3 flex items-start justify-between gap-3"><span className="text-[10px] font-bold uppercase tracking-[0.14em] text-slate-500">{label}</span><Icon className={`h-4 w-4 ${tone.text}`} /></div>
+    <div className={`font-mono text-2xl font-black ${tone.text}`}>{value}</div>
+    <p className="mt-1 text-xs leading-relaxed text-slate-400">{detail}</p>
+  </button>
+);
+
+export const OverviewDashboard = ({ currentCity, onLocationChange, setActiveEngine, activeZone, onSelectZone, livePredictions, pipelineStatus, selectedSatellite }) => {
+  const heat = currentCity.heatEngine;
+  const continuity = currentCity.continuityEngine;
+  const primaryZone = currentCity.zones?.find((zone) => zone.severity?.includes('Critical')) || currentCity.zones?.[0];
+  const criticalWarnings = pipelineStatus?.activeEngineStreams?.filter(
+    (stream) => stream.status?.toLowerCase().includes('critical'),
+  ).length || 2;
+  const riskScore = Math.round((continuity.continuityScore + livePredictions.catchmentLevel) / 2);
+  const trend = continuity.historicalTrend || [];
+  const trendDelta = trend.length > 1 ? Math.round((trend.at(-1).stability - trend[0].stability) * 100) : 0;
+
   return (
-    <div className="flex-1 p-4 space-y-4 overflow-y-auto bg-[#060911] text-slate-100">
-      
-      {/* Title Bar */}
-      <div className="flex items-center justify-between">
-        <h1 className="text-xl font-black tracking-tight flex items-center gap-2">
-          <Globe className="w-5 h-5 text-cyan-400" />
-          Overview Dashboard (All 5 Engine Layers)
-        </h1>
-        <span className="text-xs font-semibold px-3 py-1 rounded-full bg-cyan-500/10 text-cyan-400 border border-cyan-500/20">
-          📍 {currentCity.name}, {currentCity.country}
-        </span>
+    <section className="flex-1 overflow-y-auto bg-slate-950 p-4 text-slate-100 lg:p-5">
+      <div className="mx-auto max-w-[1800px] space-y-4">
+        <header className="flex flex-wrap items-end justify-between gap-3">
+          <div><p className="text-[10px] font-bold uppercase tracking-[0.2em] text-cyan-400">Climalenz intelligence command</p><h1 className="mt-1 text-2xl font-black tracking-tight">Dashboard Overview</h1><p className="mt-1 text-xs text-slate-400">Executive environmental posture for {currentCity.name}, {currentCity.country}</p></div>
+          <div className="flex items-center gap-2 rounded-xl border border-emerald-500/20 bg-emerald-500/10 px-3 py-2 text-xs font-semibold text-emerald-300"><span className="h-2 w-2 animate-pulse rounded-full bg-emerald-400" /> Orbital telemetry synchronized</div>
+        </header>
+
+        <div className="grid gap-3 sm:grid-cols-2 2xl:grid-cols-4">
+          <MetricCard icon={Gauge} label="Composite environmental risk" value={`${riskScore}/100`} detail={riskScore >= 75 ? 'Stable operating posture' : 'Elevated environmental pressure'} tone={{ text: 'text-emerald-400', hover: 'hover:border-emerald-400/60' }} />
+          <MetricCard icon={ThermometerSun} label="Primary active anomaly" value={`+${heat.uhiDelta}°C`} detail={`${primaryZone?.name || 'Commercial zone'} LST delta`} tone={{ text: 'text-rose-400', hover: 'hover:border-rose-400/60' }} onClick={() => setActiveEngine('heat')} />
+          <MetricCard icon={Network} label="Pipeline operational health" value="98.6%" detail="All ingestion and inference services nominal" tone={{ text: 'text-cyan-400', hover: 'hover:border-cyan-400/60' }} onClick={() => setActiveEngine('bridge')} />
+          <MetricCard icon={AlertTriangle} label="Active AI agent warnings" value={`${criticalWarnings} Critical`} detail="Telemetry flags require analyst attention" tone={{ text: 'text-amber-400', hover: 'hover:border-amber-400/60' }} onClick={() => setActiveEngine('agents')} />
+        </div>
+
+        <div className="h-[min(58vh,650px)] min-h-[460px]">
+          <MapLibreView city={currentCity} onLocationChange={onLocationChange} activeEngine="overview" activeZone={activeZone} onSelectZone={onSelectZone} livePredictions={livePredictions} satelliteFeedNotice={selectedSatellite} showLayerControls />
+        </div>
+
+        <div className="grid gap-4 lg:grid-cols-3">
+          <button type="button" onClick={() => setActiveEngine('water')} className="group rounded-2xl border border-slate-800 bg-slate-950/70 p-4 text-left shadow-xl transition hover:border-cyan-400/50"><div className="flex items-center justify-between"><span className="flex items-center gap-2 text-sm font-bold"><Droplet className="h-4 w-4 text-cyan-400" /> Water engine</span><ArrowUpRight className="h-4 w-4 text-slate-500 transition group-hover:text-cyan-400" /></div><div className="mt-4 grid grid-cols-2 gap-3"><div><p className="text-[10px] uppercase tracking-wider text-slate-500">Soil moisture</p><p className="mt-1 font-mono text-xl font-black text-cyan-300">{livePredictions.soilMoisture}%</p></div><div><p className="text-[10px] uppercase tracking-wider text-slate-500">Catchment level</p><p className="mt-1 font-mono text-xl font-black text-cyan-300">{livePredictions.catchmentLevel}%</p></div></div><p className="mt-4 flex items-center gap-1 text-xs font-semibold text-amber-300"><Waves className="h-3.5 w-3.5" /> Active water deficit: {primaryZone?.name || 'Review catchment area'}</p></button>
+          <button type="button" onClick={() => setActiveEngine('heat')} className="group rounded-2xl border border-slate-800 bg-slate-950/70 p-4 text-left shadow-xl transition hover:border-rose-400/50"><div className="flex items-center justify-between"><span className="flex items-center gap-2 text-sm font-bold"><Flame className="h-4 w-4 text-rose-400" /> Heat engine</span><ArrowUpRight className="h-4 w-4 text-slate-500 transition group-hover:text-rose-400" /></div><div className="mt-4 grid grid-cols-2 gap-3"><div><p className="text-[10px] uppercase tracking-wider text-slate-500">LST surface temp</p><p className="mt-1 font-mono text-xl font-black text-rose-300">{heat.lstAvg}°C</p></div><div><p className="text-[10px] uppercase tracking-wider text-slate-500">UHI delta</p><p className="mt-1 font-mono text-xl font-black text-rose-300">+{heat.uhiDelta}°C</p></div></div><div className="mt-4 flex h-8 items-end gap-1" aria-label="Diurnal surface-temperature curve">{heat.diurnalTrend?.map((point) => <span key={point.hour} className="flex-1 rounded-t bg-rose-400/70" style={{ height: `${Math.max(18, (point.urban / 46) * 100)}%` }} title={`${point.hour}: ${point.urban}°C`} />)}</div></button>
+          <button type="button" onClick={() => setActiveEngine('continuity')} className="group rounded-2xl border border-slate-800 bg-slate-950/70 p-4 text-left shadow-xl transition hover:border-emerald-400/50"><div className="flex items-center justify-between"><span className="flex items-center gap-2 text-sm font-bold"><Trees className="h-4 w-4 text-emerald-400" /> Continuity engine</span><ArrowUpRight className="h-4 w-4 text-slate-500 transition group-hover:text-emerald-400" /></div><div className="mt-4 grid grid-cols-2 gap-3"><div><p className="text-[10px] uppercase tracking-wider text-slate-500">Ecological stability</p><p className="mt-1 font-mono text-xl font-black text-emerald-300">{continuity.stabilityIndex.toFixed(2)} ESI</p></div><div><p className="text-[10px] uppercase tracking-wider text-slate-500">10-year trend</p><p className={`mt-1 font-mono text-xl font-black ${trendDelta >= 0 ? 'text-emerald-300' : 'text-amber-300'}`}>{trendDelta >= 0 ? '+' : ''}{trendDelta} pts</p></div></div><p className="mt-4 flex items-center gap-1 text-xs font-semibold text-emerald-300"><ShieldCheck className="h-3.5 w-3.5" /> Risk projection: {continuity.riskProjection}</p></button>
+        </div>
       </div>
-
-      {/* 5 Engine Stat Summary Cards */}
-      <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
-        
-        {/* Water Engine Quick Card */}
-        <div 
-          onClick={() => setActiveEngine('water')}
-          className="bg-[#0b0f19] border border-slate-800 hover:border-cyan-500/50 p-3.5 rounded-2xl cursor-pointer transition-all hover:scale-[1.02] group shadow-lg"
-        >
-          <div className="flex items-center justify-between text-slate-400 text-xs mb-1">
-            <span className="font-bold text-[10px] uppercase">Water Engine</span>
-            <Droplet className="w-4 h-4 text-cyan-400 group-hover:scale-110 transition-transform" />
-          </div>
-          <div className="text-xl font-black text-cyan-400 font-mono mt-1">
-            {livePredictions.soilMoisture}%
-          </div>
-          <div className="text-[10px] text-slate-400 mt-1">Soil Moisture | Runoff {livePredictions.predictedRunoff}</div>
-        </div>
-
-        {/* Heat Engine Quick Card */}
-        <div 
-          onClick={() => setActiveEngine('heat')}
-          className="bg-[#0b0f19] border border-slate-800 hover:border-rose-500/50 p-3.5 rounded-2xl cursor-pointer transition-all hover:scale-[1.02] group shadow-lg"
-        >
-          <div className="flex items-center justify-between text-slate-400 text-xs mb-1">
-            <span className="font-bold text-[10px] uppercase">Heat Engine</span>
-            <Flame className="w-4 h-4 text-rose-400 group-hover:scale-110 transition-transform" />
-          </div>
-          <div className="text-xl font-black text-rose-500 font-mono mt-1">
-            {currentCity.heatEngine.lstAvg} °C
-          </div>
-          <div className="text-[10px] text-slate-400 mt-1">LST Avg | Delta +{currentCity.heatEngine.uhiDelta}°C</div>
-        </div>
-
-        {/* Continuity Engine Quick Card */}
-        <div 
-          onClick={() => setActiveEngine('continuity')}
-          className="bg-[#0b0f19] border border-slate-800 hover:border-emerald-500/50 p-3.5 rounded-2xl cursor-pointer transition-all hover:scale-[1.02] group shadow-lg"
-        >
-          <div className="flex items-center justify-between text-slate-400 text-xs mb-1">
-            <span className="font-bold text-[10px] uppercase">Continuity</span>
-            <Activity className="w-4 h-4 text-emerald-400 group-hover:scale-110 transition-transform" />
-          </div>
-          <div className="text-xl font-black text-emerald-400 font-mono mt-1">
-            {currentCity.continuityEngine.stabilityIndex}
-          </div>
-          <div className="text-[10px] text-slate-400 mt-1">Stability ESI | {currentCity.continuityEngine.riskProjection}</div>
-        </div>
-
-        {/* Bridge Pipeline Quick Card */}
-        <div 
-          onClick={() => setActiveEngine('bridge')}
-          className="bg-[#0b0f19] border border-slate-800 hover:border-purple-500/50 p-3.5 rounded-2xl cursor-pointer transition-all hover:scale-[1.02] group shadow-lg"
-        >
-          <div className="flex items-center justify-between text-slate-400 text-xs mb-1">
-            <span className="font-bold text-[10px] uppercase">Bridge</span>
-            <Network className="w-4 h-4 text-purple-400 group-hover:scale-110 transition-transform" />
-          </div>
-          <div className="text-xl font-black text-purple-400 font-mono mt-1">
-            98.6%
-          </div>
-          <div className="text-[10px] text-slate-400 mt-1">Pipeline Health | Latency 78ms</div>
-        </div>
-
-        {/* Agents AI Quick Card */}
-        <div 
-          onClick={() => setActiveEngine('agents')}
-          className="bg-[#0b0f19] border border-slate-800 hover:border-amber-500/50 p-3.5 rounded-2xl cursor-pointer transition-all hover:scale-[1.02] group col-span-2 sm:col-span-1 shadow-lg"
-        >
-          <div className="flex items-center justify-between text-slate-400 text-xs mb-1">
-            <span className="font-bold text-[10px] uppercase">Agents</span>
-            <Bot className="w-4 h-4 text-amber-400 group-hover:scale-110 transition-transform" />
-          </div>
-          <div className="text-xl font-black text-amber-400 font-mono mt-1">
-            Gemini 1.5
-          </div>
-          <div className="text-[10px] text-slate-400 mt-1">Vertex AI Copilot Active</div>
-        </div>
-
-      </div>
-
-      {/* Main Grid: GIS Map View & Engine Quick Navigation */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
-        
-        {/* GIS Canvas */}
-        <div className="lg:col-span-8 min-h-[420px]">
-          <MapLibreView
-            city={currentCity}
-            onLocationChange={onLocationChange}
-            activeEngine="overview"
-            activeZone={activeZone}
-            onSelectZone={onSelectZone}
-            livePredictions={livePredictions}
-            satelliteFeedNotice={selectedSatellite}
-          />
-        </div>
-
-        {/* Engine Navigation & Action Cards */}
-        <div className="lg:col-span-4 space-y-3 flex flex-col justify-between">
-          <div className="bg-[#0b0f19] border border-slate-800 rounded-2xl p-4 space-y-3 shadow-xl">
-            <h3 className="text-xs font-bold text-slate-200">
-              Modular Engine Navigation
-            </h3>
-
-            <div className="space-y-2 text-xs">
-              <button
-                onClick={() => setActiveEngine('water')}
-                className="w-full flex items-center justify-between p-3 rounded-xl bg-slate-900 border border-slate-800 hover:border-cyan-500/50 text-slate-200 font-medium transition-all group cursor-pointer"
-              >
-                <div className="flex items-center gap-2.5">
-                  <Droplet className="w-4 h-4 text-cyan-400" />
-                  <span>Water Engine Dashboard</span>
-                </div>
-                <ArrowRight className="w-4 h-4 text-slate-400 group-hover:translate-x-1 transition-transform" />
-              </button>
-
-              <button
-                onClick={() => setActiveEngine('heat')}
-                className="w-full flex items-center justify-between p-3 rounded-xl bg-slate-900 border border-slate-800 hover:border-rose-500/50 text-slate-200 font-medium transition-all group cursor-pointer"
-              >
-                <div className="flex items-center gap-2.5">
-                  <Flame className="w-4 h-4 text-rose-400" />
-                  <span>Heat Engine Dashboard</span>
-                </div>
-                <ArrowRight className="w-4 h-4 text-slate-400 group-hover:translate-x-1 transition-transform" />
-              </button>
-
-              <button
-                onClick={() => setActiveEngine('continuity')}
-                className="w-full flex items-center justify-between p-3 rounded-xl bg-slate-900 border border-slate-800 hover:border-emerald-500/50 text-slate-200 font-medium transition-all group cursor-pointer"
-              >
-                <div className="flex items-center gap-2.5">
-                  <Activity className="w-4 h-4 text-emerald-400" />
-                  <span>Continuity Engine Dashboard</span>
-                </div>
-                <ArrowRight className="w-4 h-4 text-slate-400 group-hover:translate-x-1 transition-transform" />
-              </button>
-
-              <button
-                onClick={() => setActiveEngine('bridge')}
-                className="w-full flex items-center justify-between p-3 rounded-xl bg-slate-900 border border-slate-800 hover:border-purple-500/50 text-slate-200 font-medium transition-all group cursor-pointer"
-              >
-                <div className="flex items-center gap-2.5">
-                  <Network className="w-4 h-4 text-purple-400" />
-                  <span>Bridge Data Pipeline</span>
-                </div>
-                <ArrowRight className="w-4 h-4 text-slate-400 group-hover:translate-x-1 transition-transform" />
-              </button>
-            </div>
-          </div>
-
-          <div className="bg-[#0b0f19] border border-slate-800 rounded-2xl p-4 text-xs text-slate-400 shadow-xl">
-            <div className="font-bold text-slate-200 mb-1 flex items-center gap-1.5">
-              <ShieldCheck className="w-4 h-4 text-emerald-400" /> Remote Sensing Pipeline
-            </div>
-            Ingesting live satellite telemetry via Sentinel-2 & Landsat-8 APIs for ground climate analytics.
-          </div>
-        </div>
-
-      </div>
-
-    </div>
+    </section>
   );
 };

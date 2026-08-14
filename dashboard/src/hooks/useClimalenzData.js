@@ -14,7 +14,7 @@ import {
 export function useClimalenzData(initialCityId = 'mumbai') {
   const [selectedCityId, setSelectedCityId] = useState(initialCityId);
   const [customCityOverride, setCustomCityOverride] = useState(null);
-  const [activeEngine, setActiveEngine] = useState('water'); // 'overview' | 'water' | 'heat' | 'continuity' | 'bridge' | 'agents' | 'map_view' | 'alerts' | 'settings'
+  const [activeEngine, setActiveEngine] = useState('overview'); // 'overview' | 'water' | 'heat' | 'continuity' | 'bridge' | 'agents' | 'map_view' | 'alerts' | 'settings'
   const [selectedSatellite, setSelectedSatellite] = useState(SATELLITE_SOURCES[0]);
   const [isLiveSyncing, setIsLiveSyncing] = useState(false);
   const [lastSyncTime, setLastSyncTime] = useState('Just now');

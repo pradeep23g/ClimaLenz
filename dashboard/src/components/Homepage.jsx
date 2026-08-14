@@ -295,7 +295,7 @@ export const Homepage = ({ onStartMonitoring }) => {
       <footer className="py-8 px-6 border-t border-slate-800/80 text-center text-xs text-slate-500">
         <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
           <div>
-            © 2026 ClimaLenz Climate Intelligence Platform · Built for Hackathon
+            © 2026 ClimaLenz Climate Intelligence Platform
           </div>
           <div className="flex items-center gap-6">
             <button onClick={onStartMonitoring} className="text-cyan-400 hover:underline cursor-pointer">
