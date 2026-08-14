@@ -184,8 +184,8 @@ export const AgentsView = ({ agentLogs, currentCity }) => {
                 Aggregated 5-engine evaluation indicates stable hydrologic baseline (Soil Moisture 32%, Catchment 75%). LST anomalies are concentrated in high-density urban corridors (+5.4°C UHI delta). Recommended mitigation: cool roofs & green corridors.
               </p>
               <div className="pt-2 flex items-center justify-between border-t border-slate-800 text-[10px] text-slate-400">
-                <span>Authors: Dharshan & Pradeep</span>
-                <span className="text-amber-400 font-semibold">Hackathon 19th</span>
+                <span>System Generated Report</span>
+                <span className="text-amber-400 font-semibold">Climalenz AI Copilot</span>
               </div>
             </div>
           </div>

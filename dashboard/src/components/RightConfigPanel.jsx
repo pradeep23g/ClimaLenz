@@ -5,7 +5,7 @@
  * All API key UI elements removed per user instructions.
  */
 import React from 'react';
-import { X, Sparkles, SlidersHorizontal, Users, Radio, Cpu } from 'lucide-react';
+import { ChevronLeft, ChevronRight, SlidersHorizontal, Radio, Cpu } from 'lucide-react';
 
 export const RightConfigPanel = ({
   activeEngine = 'water',
@@ -14,9 +14,14 @@ export const RightConfigPanel = ({
   satelliteSources,
   coefficients,
   handleCoefficientChange,
-  onClose
+  isCollapsed = false,
+  onToggleCollapse
 }) => {
   const engineTitle = activeEngine.toUpperCase();
+
+  if (isCollapsed) {
+    return <aside className="flex w-11 shrink-0 items-start justify-center border-l border-slate-800/80 bg-[#0c101d] pt-4"><button type="button" onClick={onToggleCollapse} title="Expand configuration panel" aria-label="Expand configuration panel" className="rounded-lg border border-slate-700 bg-slate-900 p-2 text-cyan-400 transition hover:border-cyan-400 hover:bg-slate-800"><ChevronLeft className="h-4 w-4" /></button></aside>;
+  }
 
   return (
     <aside className="w-80 bg-[#0c101d] border-l border-slate-800/80 flex flex-col justify-between p-4 overflow-y-auto text-xs space-y-5 select-none shrink-0 shadow-2xl">
@@ -28,14 +33,7 @@ export const RightConfigPanel = ({
             <SlidersHorizontal className="w-4 h-4 text-cyan-400" />
             ENGINE CONFIG ({engineTitle})
           </h2>
-          {onClose && (
-            <button
-              onClick={onClose}
-              className="text-slate-400 hover:text-slate-200 p-1 rounded-md hover:bg-slate-800 transition-colors"
-            >
-              <X className="w-4 h-4" />
-            </button>
-          )}
+          <button type="button" onClick={onToggleCollapse} title="Collapse panel and expand map workspace" aria-label="Collapse panel and expand map workspace" className="rounded-md p-1 text-slate-400 transition-colors hover:bg-slate-800 hover:text-cyan-400"><ChevronRight className="h-4 w-4" /></button>
         </div>
 
         {/* Satellite Source Dropdown */}
@@ -140,23 +138,9 @@ export const RightConfigPanel = ({
 
       </div>
 
-      {/* Footer Section: Team Context */}
-      <div className="pt-4 border-t border-slate-800/80 bg-slate-950/60 p-3.5 rounded-2xl border border-slate-800/60">
-        <div className="flex items-start gap-2.5">
-          <Users className="w-4 h-4 text-cyan-400 mt-0.5" />
-          <div>
-            <div className="font-bold text-xs text-slate-200">
-              Project Team:
-            </div>
-            <div className="text-[11px] text-slate-400 font-medium">
-              Dharshan, Pradeep, Advik
-            </div>
-            <div className="text-[10px] text-cyan-400 font-semibold mt-1 flex items-center gap-1">
-              <Sparkles className="w-3 h-3 text-cyan-400" />
-              Panimalar Hackathon 19th
-            </div>
-          </div>
-        </div>
+      <div className="rounded-lg border border-slate-800 bg-slate-900/80 p-3 text-xs text-slate-400">
+        <div className="mb-1 flex items-center gap-2 font-mono font-semibold text-cyan-400"><span className="h-2 w-2 animate-pulse rounded-full bg-cyan-400" />CLIMALENZ ENGINE v2.4</div>
+        <p>Satellite Orbital Ingestion: Operational</p>
       </div>
 
     </aside>

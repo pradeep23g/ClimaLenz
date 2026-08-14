@@ -75,7 +75,7 @@ export const SettingsView = ({ selectedSatellite, setSelectedSatellite, satellit
                 onChange={(e) => setRefreshInterval(e.target.value)}
                 className="w-full bg-slate-950 border border-slate-800 text-slate-200 text-xs rounded-xl p-2.5 focus:outline-none focus:border-cyan-500"
               >
-                <option value="10s">10 Seconds (Live Hackathon Mode)</option>
+                <option value="10s">10 Seconds (High-frequency mode)</option>
                 <option value="30s">30 Seconds</option>
                 <option value="60s">1 Minute</option>
               </select>
@@ -83,16 +83,14 @@ export const SettingsView = ({ selectedSatellite, setSelectedSatellite, satellit
           </div>
         </div>
 
-        {/* Card 3: Team Credits */}
+        {/* Card 3: System Information */}
         <div className="bg-[#0e1424] border border-slate-800 rounded-2xl p-4 space-y-2">
           <h3 className="text-xs font-bold text-slate-200 flex items-center gap-2">
             <Sparkles className="w-4 h-4 text-amber-400" />
-            Climalenz Team & Hackathon Context
+            Climalenz System Information
           </h3>
           <p className="text-xs text-slate-400 leading-relaxed">
-            Backend Team: Dharshan (dharshansri2007) & Pradeep (pradeep23g)
-            <br />
-            Frontend Dashboard: Built for Panimalar Hackathon (Submission: 19th).
+            Climalenz uses configurable satellite source selection and a MapLibre-powered GIS canvas for operational climate analysis.
           </p>
         </div>
 

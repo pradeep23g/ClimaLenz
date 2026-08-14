@@ -45,7 +45,7 @@ export const AlertsView = ({ currentCity }) => {
       engine: 'Agents Layer',
       severity: 'Info',
       time: '5 hours ago',
-      desc: 'Vertex AI Gemini model synthesized hackathon climate report.'
+      desc: 'AI copilot completed the latest climate intelligence synthesis.'
     }
   ];
 
