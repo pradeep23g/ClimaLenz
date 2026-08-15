@@ -122,9 +122,16 @@ class PlanetaryThermalClient:
         bbox: List[float] = DEFAULT_BBOX,
         date_range: str = "2026-07-01/2026-07-31",
         grid_shape: Tuple[int, int] = DEFAULT_GRID,
-    ) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+    ) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, str]:
+        """
+        One-call convenience wrapper that fetches everything the training/
+        simulation pipeline needs and hands back the same 5-tuple shape as
+        SyntheticThermalClient.build_training_arrays(), so
+        app/services/satellite/client_factory.py can swap real <-> synthetic
+        without the caller (app/main.py, training scripts) knowing the
+        difference.
+        """
         import time
-
         logger.info(f"=== HEAT ENGINE DATA FETCH START (date_range={date_range}) ===")
         t_total_fetch_0 = time.time()
 
@@ -144,7 +151,7 @@ class PlanetaryThermalClient:
 
         # 2. MODIS Download & Regrid
         t_modis_dl_0 = time.time()
-        lst_stack = build_lst_stack(modis_items, bbox=bbox, grid_shape=grid_shape)
+        lst_stack, data_provenance = build_lst_stack(modis_items, bbox=bbox, grid_shape=grid_shape, date_range=date_range)
         t_modis_dl = round(time.time() - t_modis_dl_0, 4)
 
         # 3. Sentinel-2 Search & Download
@@ -171,7 +178,40 @@ class PlanetaryThermalClient:
         logger.info(f"  • ESA WorldCover Download:   {t_wc}s")
         logger.info(f"  • Total Search + Download:   {t_total_fetch}s")
 
-        return lst_stack, ndvi_grid, landcover_grid, land_mask
+        return lst_stack, ndvi_grid, landcover_grid, land_mask, data_provenance
+
+    def build_inference_arrays(
+        self,
+        bbox: List[float] = DEFAULT_BBOX,
+        date_range: str = "2026-07-01/2026-07-31",
+        grid_shape: Tuple[int, int] = DEFAULT_GRID,
+    ) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray, str]:
+        """
+        Fetches minimal scenes for live inference.
+        Returns: x_test_array, y_real_array, ndvi_grid, landcover_grid, land_mask, data_provenance
+        """
+        modis_items = self.fetch_modis_data(bbox=bbox, date_range=date_range)
+        if not modis_items:
+            raise ValueError(
+                f"No MODIS scenes found for bbox={bbox} over date_range={date_range}."
+            )
+            
+        from app.services.preprocessing import build_inference_input
+        x_test, y_real, data_provenance = build_inference_input(
+            modis_items, bbox=bbox, grid_shape=grid_shape, date_range=date_range
+        )
+
+        s2_item = self.fetch_sentinel2_item(bbox=bbox)
+        if s2_item is None:
+            raise ValueError(f"No low-cloud Sentinel-2 scene found for bbox={bbox}.")
+        ndvi_grid = generate_ndvi_grid(s2_item, grid_shape=grid_shape)
+
+        wc_item = self.fetch_esa_worldcover_item(bbox=bbox)
+        if wc_item is None:
+            raise ValueError(f"No ESA WorldCover scene found for bbox={bbox}.")
+        landcover_grid, land_mask = generate_landcover_and_mask(wc_item, grid_shape=grid_shape)
+
+        return x_test, y_real, ndvi_grid, landcover_grid, land_mask, data_provenance
 
 
 # Example usage (This only runs if you execute this specific file directly for testing)

@@ -63,12 +63,15 @@ import concurrent.futures
 
 def build_lst_stack(
     signed_items: List[Any], 
-    bbox: List[float] = DEFAULT_BBOX, 
-    grid_shape: Tuple[int, int] = DEFAULT_GRID
-) -> np.ndarray:
+    bbox: List[float], 
+    grid_shape: Tuple[int, int] = DEFAULT_GRID,
+    date_range: str = "2026-07-01/2026-07-31"
+) -> Tuple[np.ndarray, str]:
     """
-    Iterates over all signed STAC items, processes them in parallel threads, and builds 
-    the 3D numpy array stack (Time, H, W) for the model.
+    Given a list of signed STAC items for LST (e.g. MOD11A1), loads the 
+    underlying raster data in parallel threads, regrids them to the target shape, and stacks 
+    them into a single 3D array (time, height, width).
+    Returns (stack, provenance_string).
     """
     logger.info(f"Processing {len(signed_items)} scenes into a {grid_shape} grid (parallel threads)...")
     
@@ -79,21 +82,146 @@ def build_lst_stack(
     # Filter out None values from failed reads
     valid_arrays = [arr for arr in scanned if arr is not None]
     
+    provenance = "live"
+
     if not valid_arrays:
         logger.warning("All live MODIS scenes were cloud-obscured. Falling back to regional baseline LST grid.")
         baseline = np.full(grid_shape, 32.0, dtype="float32") + np.random.normal(0, 0.5, grid_shape).astype("float32")
         valid_arrays = [baseline + np.random.normal(0, 0.1, grid_shape).astype("float32") for _ in range(5)]
-    elif len(valid_arrays) < 3:
-        # Pad small LST stacks to at least 5 scenes for PyTorch train/val dataset splits
-        logger.info(f"Padding {len(valid_arrays)} valid scenes to 5 scenes for model training split.")
+        provenance = "synthetic_fallback"
+    elif len(valid_arrays) < 5:
+        # Pad small LST stacks to at least 5 scenes using Continuity Engine.
+        logger.info(f"Padding {len(valid_arrays)} valid scenes to 5 scenes using Continuity Engine.")
+        from app.services.continuity_client import get_reconstructed_scene
+        try:
+            start_date, end_date = date_range.split("/")
+        except ValueError:
+            start_date, end_date = "2026-07-01", "2026-07-31"
+            
+        used_synthetic = False
+        used_continuity = False
+
         while len(valid_arrays) < 5:
-            last_scene = valid_arrays[-1]
-            valid_arrays.append(last_scene + np.random.normal(0, 0.1, grid_shape).astype("float32"))
+            try:
+                recon = get_reconstructed_scene(bbox, start_date, end_date)
+                if recon.shape != grid_shape:
+                    logger.warning(f"Reconstructed shape {recon.shape} != {grid_shape}, falling back to synthetic.")
+                    raise ValueError("Shape mismatch")
+                valid_arrays.append(recon.astype("float32"))
+                used_continuity = True
+                logger.info("Successfully fetched and appended reconstructed scene.")
+            except Exception as e:
+                logger.error(f"Continuity engine repair failed ({e}). Falling back to true last-resort synthetic padding.")
+                last_scene = valid_arrays[-1]
+                valid_arrays.append(last_scene + np.random.normal(0, 0.1, grid_shape).astype("float32"))
+                used_synthetic = True
+        
+        if used_synthetic:
+            provenance = "synthetic_fallback"
+        elif used_continuity:
+            provenance = "continuity_reconstructed"
         
     lst_stack = np.stack(valid_arrays)
-    logger.info(f"Successfully built CLEAN LST Stack shape: {lst_stack.shape}")
+    logger.info(f"Successfully built CLEAN LST Stack shape: {lst_stack.shape}, provenance: {provenance}")
     
-    return lst_stack
+    return lst_stack, provenance
+
+def build_inference_input(
+    signed_items: List[Any], 
+    bbox: List[float], 
+    grid_shape: Tuple[int, int] = DEFAULT_GRID,
+    date_range: str = "2026-07-01/2026-07-31"
+) -> Tuple[np.ndarray, np.ndarray, str]:
+    """
+    Minimal scene fetcher strictly for live inference (skips dataloaders).
+    Pulls exactly 2 scenes: today (x_test) and tomorrow (y_real), applies
+    Continuity Engine repair only if they are clouded, and evaluates provenance.
+    Returns (x_test_array, y_real_array, provenance_string).
+    """
+    # Grab the last two available scenes chronologically (today and tomorrow)
+    # or the only two scenes if the list is small.
+    target_items = signed_items[-2:] if len(signed_items) >= 2 else signed_items
+    logger.info(f"Processing up to 2 scenes for inference into a {grid_shape} grid...")
+
+    def get_date_str(item) -> str:
+        if hasattr(item, "datetime") and item.datetime:
+            return item.datetime.strftime("%Y-%m-%d")
+        if hasattr(item, "properties") and "datetime" in item.properties:
+            return item.properties["datetime"][:10]
+        # Fallback to general range if missing
+        return date_range.split("/")[0] if "/" in date_range else "2026-07-01"
+
+    # Pair each item with its date and processed array
+    processed = []
+    for item in target_items:
+        date_str = get_date_str(item)
+        arr = load_and_regrid_item(item, bbox, grid_shape)
+        processed.append({"date": date_str, "array": arr})
+
+    def fetch_fallback(date_str: str, slot_name: str) -> Tuple[np.ndarray, str]:
+        # Tries continuity, falls back to synthetic
+        logger.info(f"Padding {slot_name} (date {date_str}) using Continuity Engine.")
+        from app.services.continuity_client import get_reconstructed_scene
+        
+        # Continuity Engine needs a window to find a Sentinel-2 pass (5-day revisit cycle)
+        # Pad +/- 3 days around the target date to ensure an optical scene exists to repair
+        from datetime import datetime, timedelta
+        target_dt = datetime.strptime(date_str, "%Y-%m-%d")
+        window_start = (target_dt - timedelta(days=3)).strftime("%Y-%m-%d")
+        window_end = (target_dt + timedelta(days=3)).strftime("%Y-%m-%d")
+        
+        try:
+            recon = get_reconstructed_scene(bbox, window_start, window_end)
+            if recon.shape != grid_shape:
+                raise ValueError("Shape mismatch")
+            logger.info(f"Successfully fetched reconstructed scene for target {date_str}.")
+            return recon.astype("float32"), "continuity_reconstructed"
+        except Exception as e:
+            logger.error(f"Continuity engine repair failed ({e}). Falling back to synthetic.")
+            # For purely synthetic fallback on individual scene, use 32.0 baseline + noise
+            baseline = np.full(grid_shape, 32.0, dtype="float32") + np.random.normal(0, 0.5, grid_shape).astype("float32")
+            return baseline, "synthetic_fallback"
+
+    x_prov = "live"
+    y_prov = "live"
+
+    if len(processed) >= 2:
+        x_info = processed[0]
+        y_info = processed[1]
+    elif len(processed) == 1:
+        x_info = processed[0]
+        # Fake a next day for y_info if we only have one item
+        y_info = {"date": date_range.split("/")[-1] if "/" in date_range else "2026-07-31", "array": None}
+    else:
+        d1, d2 = ("2026-07-01", "2026-07-02")
+        if "/" in date_range:
+            parts = date_range.split("/")
+            d1 = parts[0]
+            d2 = parts[-1]
+        x_info = {"date": d1, "array": None}
+        y_info = {"date": d2, "array": None}
+
+    if x_info["array"] is not None:
+        x_test_arr = x_info["array"]
+    else:
+        x_test_arr, x_prov = fetch_fallback(x_info["date"], "x_test")
+
+    if y_info["array"] is not None:
+        y_real_arr = y_info["array"]
+    else:
+        y_real_arr, y_prov = fetch_fallback(y_info["date"], "y_real")
+
+    # Worst-case wins
+    provenances = {x_prov, y_prov}
+    if "synthetic_fallback" in provenances:
+        provenance = "synthetic_fallback"
+    elif "continuity_reconstructed" in provenances:
+        provenance = "continuity_reconstructed"
+    else:
+        provenance = "live"
+
+    logger.info(f"Successfully built Inference input. Provenance: {provenance}")
+    return x_test_arr, y_real_arr, provenance
 
 def _fetch_s2_band(href: str, grid_shape: Tuple[int, int]) -> np.ndarray:
     with rasterio.Env(GDAL_HTTP_TIMEOUT="15", GDAL_HTTP_MAX_RETRY="2"):

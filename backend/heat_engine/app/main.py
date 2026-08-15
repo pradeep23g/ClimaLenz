@@ -5,7 +5,7 @@ import logging
 from fastapi import FastAPI, HTTPException, status
 
 from app.models.simulation_schemas import SimulationRequest, SimulationResponse
-from app.pipeline import run_simulation_pipeline
+from app.pipeline import run_inference_pipeline
 from app.services.satellite.client_factory import resolve_thermal_client
 
 # Configure basic logging for Cloud Run stdout compatibility
@@ -59,13 +59,14 @@ def run_what_if_simulation(payload: SimulationRequest) -> SimulationResponse:
     """
     try:
         client = resolve_thermal_client()
-        lst_stack, ndvi_grid, landcover_grid, land_mask = client.build_training_arrays(
+        x_test_array, y_real_array, ndvi_grid, landcover_grid, land_mask, data_provenance = client.build_inference_arrays(
             bbox=payload.bbox,
             date_range=payload.date_range,
         )
 
-        result = run_simulation_pipeline(
-            lst_stack=lst_stack,
+        result = run_inference_pipeline(
+            x_test_array=x_test_array,
+            y_real_array=y_real_array,
             ndvi_grid=ndvi_grid,
             landcover_grid=landcover_grid,
             land_mask=land_mask,
@@ -79,6 +80,8 @@ def run_what_if_simulation(payload: SimulationRequest) -> SimulationResponse:
             guardrail_status=result["guardrail_status"],
             details=result["details"],
             delta_t_grid=result["delta_T_grid"].tolist(),
+            data_provenance=data_provenance,
+            visualization_base64=result.get("visualization_base64"),
         )
 
     except FileNotFoundError as missing_artifact:

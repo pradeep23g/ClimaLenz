@@ -100,3 +100,81 @@ def run_simulation_pipeline(
         "delta_T_grid": result["delta_T_grid"],
         "visualization_base64": visualization_base64,
     }
+
+def run_inference_pipeline(
+    x_test_array: np.ndarray,
+    y_real_array: np.ndarray,
+    ndvi_grid: np.ndarray, 
+    landcover_grid: np.ndarray, 
+    land_mask: np.ndarray, 
+    intervention_type: str = "CANOPY", 
+    delta: float = 0.15
+) -> dict:
+    """
+    Orchestrates the ClimaLenz simulation pipeline specifically for live inference.
+    Bypasses data loader batching and directly processes the minimal required scenes.
+    """
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    logger.info(f"Running inference pipeline on device: {device}")
+
+    import time
+    t_prep_0 = time.time()
+
+    # Prepare inputs directly without DataLoaders
+    # x shape needed: (1, 3, H, W)
+    x = np.stack([x_test_array, ndvi_grid, landcover_grid], axis=0)
+    sample_input = torch.tensor(x, dtype=torch.float32).unsqueeze(0).to(device)
+    y_real = y_real_array
+
+    logger.info("Loading PINN model weights for simulation...")
+    pinn_model = load_pinn().to(device)
+
+    baseline_model = None
+    try:
+        baseline_model = load_baseline().to(device)
+    except Exception as e:
+        logger.warning(f"Baseline model unavailable, skipping comparison plot: {e}")
+
+    t_prep_s = round(time.time() - t_prep_0, 4)
+
+    t_inf_0 = time.time()
+    logger.info(f"--- Testing {intervention_type} Intervention (delta={delta}) ---")
+    result = run_what_if(
+        model=pinn_model, 
+        baseline_input=sample_input, 
+        intervention_type=intervention_type, 
+        delta=delta
+    )
+    t_inf_s = round(time.time() - t_inf_0, 4)
+
+    logger.info(f"=== HEAT ENGINE INFERENCE TIMINGS ===")
+    logger.info(f"  • Preprocessing (DataLoader & Resampling): {t_prep_s}s")
+    logger.info(f"  • PINN Model Inference & Guardrails:        {t_inf_s}s")
+
+    status = result["guardrail"]["status"]
+    reason = result["guardrail"].get("reason", "Within safe cooling limits!")
+    
+    logger.info(f"Guardrail Status: {status}")
+    logger.info(f"Details: {reason}")
+
+    visualization_base64 = None
+    if baseline_model is not None:
+        try:
+            visualization_base64 = generate_comparison_plot(
+                x_single=sample_input,
+                y_real=y_real,
+                baseline_model=baseline_model,
+                pinn_model=pinn_model,
+                device=device,
+            )
+        except Exception as e:
+            logger.warning(f"Comparison plot generation failed: {e}")
+
+    return {
+        "intervention_type": intervention_type,
+        "delta": delta,
+        "guardrail_status": status,
+        "details": reason,
+        "delta_T_grid": result["delta_T_grid"],
+        "visualization_base64": visualization_base64,
+    }

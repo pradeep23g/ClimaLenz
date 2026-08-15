@@ -33,7 +33,7 @@ class SyntheticThermalClient:
         date_range: str = "2025-01-01/2026-07-31",
         grid_shape: Tuple[int, int] = DEFAULT_GRID,
         num_days: int = DEFAULT_DAYS,
-    ) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+    ) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, str]:
         # Deterministic seeding via json.dumps(sort_keys=True) rather than
         # repr() -- repr() of a dict is key-order-dependent, which bit the
         # water_engine synthetic client earlier in this project (two
@@ -78,4 +78,18 @@ class SyntheticThermalClient:
             f"lst_stack.shape={lst_stack.shape} -- is_synthetic_mock=True."
         )
 
-        return lst_stack, ndvi_grid, landcover_grid, land_mask
+        return lst_stack, ndvi_grid, landcover_grid, land_mask, "synthetic_fallback"
+
+    def build_inference_arrays(
+        self,
+        bbox: List[float] = DEFAULT_BBOX,
+        date_range: str = "2025-01-01/2026-07-31",
+        grid_shape: Tuple[int, int] = DEFAULT_GRID,
+    ) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray, str]:
+        """
+        Build inference arrays (x_test and y_real) along with grids.
+        """
+        lst_stack, ndvi_grid, landcover_grid, land_mask, data_provenance = self.build_training_arrays(
+            bbox=bbox, date_range=date_range, grid_shape=grid_shape, num_days=2
+        )
+        return lst_stack[0], lst_stack[1], ndvi_grid, landcover_grid, land_mask, data_provenance
