@@ -1444,3 +1444,551 @@
   color: #fff;
   transform: translateY(-2px);
 }
+
+/* ============================================================================
+   LIMITATIONS PAGE ("WHAT WE DON'T CLAIM")
+   ========================================================================== */
+.climalenz-design .limit-wrapper {
+  width: 100%;
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 120px clamp(20px, 5vw, 60px) 140px;
+}
+
+.climalenz-design .limit-header {
+  margin-bottom: 64px;
+}
+
+.climalenz-design .limit-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.climalenz-design .limit-card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  padding: clamp(24px, 3.5vw, 36px);
+  position: relative;
+  overflow: hidden;
+  transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.climalenz-design .limit-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 3px;
+  height: 100%;
+  background: transparent;
+  transition: background 0.3s ease;
+}
+
+.climalenz-design .limit-card:hover {
+  background: var(--surface-2);
+  border-color: var(--line-2);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-2);
+}
+
+.climalenz-design .limit-card:hover::before {
+  background: var(--cobalt-bright);
+  box-shadow: 0 0 12px var(--cobalt-glow);
+}
+
+.climalenz-design .limit-tag {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 4px 10px;
+  border-radius: 4px;
+  background: rgba(43, 90, 194, 0.08);
+  border: 1px solid rgba(43, 90, 194, 0.25);
+  color: var(--cobalt-bright);
+  display: inline-block;
+  margin-bottom: 14px;
+}
+
+.climalenz-design .limit-title {
+  font-family: var(--sans);
+  font-size: clamp(18px, 2.2vw, 22px);
+  font-weight: 600;
+  color: var(--text);
+  letter-spacing: -0.02em;
+  margin-bottom: 12px;
+}
+
+.climalenz-design .limit-desc {
+  font-size: 14px;
+  line-height: 1.7;
+  color: var(--text-2);
+}
+
+/* ============================================================================
+   ABOUT PAGE ("THE PROBLEM WE STARTED WITH")
+   ========================================================================== */
+.climalenz-design .about-wrapper {
+  width: 100%;
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 120px clamp(20px, 5vw, 60px) 140px;
+}
+
+.climalenz-design .about-header {
+  margin-bottom: 80px;
+}
+
+.climalenz-design .about-section {
+  position: relative;
+  padding-left: 32px;
+  margin-bottom: 56px;
+}
+
+/* Vertical timeline connecting the problem statements */
+.climalenz-design .about-section::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 8px;
+  bottom: -64px;
+  width: 2px;
+  background: var(--line);
+}
+.climalenz-design .about-section:last-child::before {
+  display: none;
+}
+
+/* Glowing dot indicator */
+.climalenz-design .about-section::after {
+  content: '';
+  position: absolute;
+  left: -5px;
+  top: 8px;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--surface);
+  border: 2px solid var(--cobalt-bright);
+  box-shadow: 0 0 10px var(--cobalt-glow);
+  transition: all 0.3s ease;
+}
+
+.climalenz-design .about-section:hover::after {
+  background: var(--cobalt-bright);
+  transform: scale(1.2);
+}
+
+.climalenz-design .about-title {
+  font-family: var(--sans);
+  font-size: clamp(20px, 2.5vw, 26px);
+  font-weight: 600;
+  color: var(--text);
+  letter-spacing: -0.02em;
+  margin-bottom: 16px;
+  transition: color 0.3s ease;
+}
+
+.climalenz-design .about-section:hover .about-title {
+  color: var(--cobalt-bright);
+}
+
+.climalenz-design .about-desc {
+  font-size: 16px;
+  line-height: 1.8;
+  color: var(--text-2);
+}
+
+.climalenz-design .hackathon-card {
+  background: rgba(43, 90, 194, 0.05);
+  border: 1px solid rgba(43, 90, 194, 0.2);
+  border-radius: var(--r-lg);
+  padding: 32px;
+  margin-top: 64px;
+  position: relative;
+  overflow: hidden;
+}
+
+.climalenz-design .hackathon-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; width: 4px; height: 100%;
+  background: var(--cobalt-bright);
+  box-shadow: 0 0 15px var(--cobalt-glow);
+}
+
+/* ============================================================================
+   METHODOLOGY PAGE & ENGINE SLIDER
+   ========================================================================== */
+.climalenz-design .meth-wrapper {
+  width: 100%;
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 120px clamp(20px, 5vw, 60px) 140px;
+}
+
+/* Engine Interactive Slider */
+.climalenz-design .cs-wrapper {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  padding: 32px;
+  margin-bottom: 64px;
+}
+.climalenz-design .cs-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+.climalenz-design .cs-image-box {
+  position: relative;
+  width: 100%;
+  height: 400px;
+  background: #000;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid var(--line);
+}
+@media (min-width: 768px) {
+  .climalenz-design .cs-image-box { height: 500px; }
+}
+.climalenz-design .cs-label {
+  position: absolute;
+  bottom: 16px;
+  padding: 6px 12px;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(4px);
+  color: #fff;
+  font-family: var(--mono);
+  font-size: 11px;
+  border-radius: 4px;
+  z-index: 20;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+.climalenz-design .cs-label.left { left: 16px; }
+.climalenz-design .cs-label.right { right: 16px; }
+
+.climalenz-design .cs-divider {
+  position: absolute;
+  top: 0; bottom: 0;
+  width: 2px;
+  background: #fff;
+  z-index: 30;
+  pointer-events: none;
+  box-shadow: 0 0 10px rgba(0,0,0,0.5);
+}
+.climalenz-design .cs-handle {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 32px;
+  height: 32px;
+  background: #fff;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #000;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.5);
+}
+.climalenz-design .cs-slider-input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  z-index: 40;
+  cursor: ew-resize;
+}
+.climalenz-design .cs-controls {
+  display: flex;
+  gap: 8px;
+  margin-top: 20px;
+  flex-wrap: wrap;
+}
+.climalenz-design .cs-btn {
+  padding: 8px 16px;
+  font-family: var(--mono);
+  font-size: 11px;
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  color: var(--text-3);
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-transform: uppercase;
+}
+.climalenz-design .cs-btn.active {
+  background: rgba(43, 90, 194, 0.1);
+  border-color: var(--cobalt-bright);
+  color: var(--cobalt-bright);
+}
+
+/* Spectral Indices Grid */
+.climalenz-design .meth-indices-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 16px;
+  margin-bottom: 80px;
+}
+.climalenz-design .meth-index-card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 24px;
+}
+.climalenz-design .meth-index-card:hover {
+  border-color: var(--line-2);
+}
+
+/* Agent Workflow Stack */
+.climalenz-design .meth-agent-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.climalenz-design .meth-agent-card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--line);
+  border-radius: 8px;
+  padding: 24px;
+  transition: all 0.3s ease;
+}
+.climalenz-design .meth-agent-card:hover {
+  border-left-color: var(--cobalt-bright);
+  background: var(--surface-2);
+}
+
+/* ============================================================================
+   METHODOLOGY PAGE — NEW CLASSES
+   Append these to your existing stylesheet, alongside your current
+   .cs-* / .meth-* rules. All use the same tokens (var(--surface),
+   var(--line), var(--mono), var(--cobalt-bright), etc.) as the rest of
+   your design system — nothing new introduced.
+   ========================================================================== */
+
+/* ── Quick nav chip row ── */
+.climalenz-design .meth-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 40px;
+  position: sticky;
+  top: 16px;
+  z-index: 50;
+}
+.climalenz-design .meth-nav-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-3);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  text-decoration: none;
+  transition: all 0.2s ease;
+}
+.climalenz-design .meth-nav-chip:hover {
+  color: var(--cobalt-bright);
+  border-color: var(--cobalt-bright);
+  background: rgba(43, 90, 194, 0.08);
+}
+
+/* ── Continuity field-definition grid ── */
+.climalenz-design .meth-fieldgrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 14px;
+}
+.climalenz-design .meth-field-card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 18px;
+}
+.climalenz-design .meth-field-name {
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--cobalt-bright);
+  margin-bottom: 8px;
+}
+.climalenz-design .meth-field-desc {
+  color: var(--text-3);
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+/* ── Generic content panel (risk model, guardrail, bridge) ── */
+.climalenz-design .meth-panel {
+  background: rgba(43, 90, 194, 0.05);
+  border: 1px solid rgba(43, 90, 194, 0.2);
+  border-radius: var(--r-lg, 12px);
+  padding: 32px;
+  margin-top: 8px;
+}
+.climalenz-design .meth-subhead {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-3);
+  margin-bottom: 16px;
+}
+
+/* ── Weight / guardrail bars ── */
+.climalenz-design .meth-weight-row {
+  margin-bottom: 16px;
+}
+.climalenz-design .meth-weight-label {
+  display: flex;
+  justify-content: space-between;
+  font-size: 13px;
+  color: var(--text-2);
+  margin-bottom: 6px;
+}
+.climalenz-design .meth-weight-value {
+  font-family: var(--mono);
+  color: var(--text);
+  font-size: 12px;
+}
+.climalenz-design .meth-weight-track {
+  width: 100%;
+  height: 6px;
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  overflow: hidden;
+}
+.climalenz-design .meth-weight-fill {
+  height: 100%;
+  background: var(--good);
+  border-radius: 999px;
+}
+
+/* ── Telemetry modifier list ── */
+.climalenz-design .meth-modifier-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.climalenz-design .meth-modifier-list li {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 13px;
+  color: var(--text-2);
+  border-bottom: 1px solid var(--line);
+  padding-bottom: 10px;
+}
+.climalenz-design .meth-modifier-value {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--text-4);
+  white-space: nowrap;
+  text-align: right;
+}
+
+/* ── Risk tier scale ── */
+.climalenz-design .meth-scale-wrap {
+  width: 100%;
+}
+.climalenz-design .meth-scale-bar {
+  display: flex;
+  width: 100%;
+  height: 36px;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid var(--line);
+}
+.climalenz-design .meth-scale-segment {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.climalenz-design .meth-scale-label {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.05em;
+  color: #000;
+  font-weight: 600;
+}
+.climalenz-design .meth-scale-ticks {
+  display: flex;
+  justify-content: space-between;
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--text-4);
+  margin-top: 6px;
+}
+
+/* ── SLA cards ── */
+.climalenz-design .meth-sla-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 12px;
+}
+.climalenz-design .meth-sla-card {
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 16px;
+  text-align: center;
+}
+.climalenz-design .meth-sla-level {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.06em;
+  color: var(--text-3);
+  margin-bottom: 8px;
+}
+.climalenz-design .meth-sla-hours {
+  font-family: var(--sans);
+  font-size: 24px;
+  font-weight: 600;
+  color: var(--cobalt-bright);
+}
+.climalenz-design .meth-sla-caption {
+  font-family: var(--mono);
+  font-size: 9px;
+  color: var(--text-4);
+  text-transform: uppercase;
+  margin-top: 4px;
+}
+
+/* ── Guardrail status pills ── */
+.climalenz-design .meth-guardrail-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border-radius: 999px;
+  font-family: var(--mono);
+  font-size: 11px;
+  border: 1px solid var(--line);
+}
+.climalenz-design .meth-guardrail-pill.passed {
+  color: var(--good);
+  border-color: rgba(63, 125, 82, 0.4);
+  background: rgba(63, 125, 82, 0.08);
+}
+.climalenz-design .meth-guardrail-pill.flagged {
+  color: #d64545;
+  border-color: rgba(214, 69, 69, 0.4);
+  background: rgba(214, 69, 69, 0.08);
+}
