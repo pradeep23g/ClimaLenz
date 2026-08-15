@@ -4,6 +4,9 @@ from app.services.model_arch import ThermalCNN
 
 ARTIFACTS_DIR = Path(__file__).parent.parent.parent / "artifacts"
 
+import functools
+
+@functools.lru_cache(maxsize=2)
 def load_model(filename: str) -> ThermalCNN:
     model = ThermalCNN()
     model.load_state_dict(

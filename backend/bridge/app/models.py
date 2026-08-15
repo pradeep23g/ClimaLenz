@@ -22,6 +22,12 @@ class CoLocationRequest(BaseModel):
     """Allows the caller to increase cloud tolerance to trigger the Continuity Engine repair."""
 
 
+class StageTimings(BaseModel):
+    water_engine_s: float
+    heat_engine_s: float
+    total_s: float
+
+
 class CoLocationReport(BaseModel):
     """Combined output — the thing ClimaLenz's whole pitch is actually about."""
 
@@ -41,3 +47,6 @@ class CoLocationReport(BaseModel):
     narrative: str
     """Template-generated for now — see co_location.py docstring for why
     this is deliberately NOT an LLM call yet."""
+
+    stage_timings: StageTimings
+

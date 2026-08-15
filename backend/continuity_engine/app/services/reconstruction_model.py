@@ -60,6 +60,12 @@ class CloudRepairUNet(nn.Module):
         sar_bands: torch.Tensor,      # (B, 2, H, W)
         cloud_mask: torch.Tensor,     # (B, 1, H, W) — 1.0 where cloud, 0.0 where real
     ) -> torch.Tensor:
+        target_h, target_w = optical_bands.shape[-2], optical_bands.shape[-1]
+        if sar_bands.shape[-2:] != (target_h, target_w):
+            sar_bands = nn.functional.interpolate(sar_bands, size=(target_h, target_w), mode="bilinear", align_corners=False)
+        if cloud_mask.shape[-2:] != (target_h, target_w):
+            cloud_mask = nn.functional.interpolate(cloud_mask, size=(target_h, target_w), mode="nearest")
+
         x = torch.cat([optical_bands, sar_bands, cloud_mask], dim=1)
 
         e1 = self.enc1(x)
@@ -70,8 +76,13 @@ class CloudRepairUNet(nn.Module):
         b = self.bottleneck(p2)
 
         u2 = self.up2(b)
+        if u2.shape[-2:] != e2.shape[-2:]:
+            u2 = nn.functional.interpolate(u2, size=e2.shape[-2:], mode="bilinear", align_corners=False)
         d2 = self.dec2(torch.cat([u2, e2], dim=1))
+
         u1 = self.up1(d2)
+        if u1.shape[-2:] != e1.shape[-2:]:
+            u1 = nn.functional.interpolate(u1, size=e1.shape[-2:], mode="bilinear", align_corners=False)
         d1 = self.dec1(torch.cat([u1, e1], dim=1))
 
         reconstructed = self.out_conv(d1)

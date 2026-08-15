@@ -59,18 +59,22 @@ def load_and_regrid_item(
         logger.error(f"Error processing item {item.id}: {e}")
         return None
 
+import concurrent.futures
+
 def build_lst_stack(
     signed_items: List[Any], 
     bbox: List[float] = DEFAULT_BBOX, 
     grid_shape: Tuple[int, int] = DEFAULT_GRID
 ) -> np.ndarray:
     """
-    Iterates over all signed STAC items, processes them, and builds 
+    Iterates over all signed STAC items, processes them in parallel threads, and builds 
     the 3D numpy array stack (Time, H, W) for the model.
     """
-    logger.info(f"Processing {len(signed_items)} scenes into a {grid_shape} grid...")
+    logger.info(f"Processing {len(signed_items)} scenes into a {grid_shape} grid (parallel threads)...")
     
-    scanned = [load_and_regrid_item(it, bbox, grid_shape) for it in signed_items]
+    with concurrent.futures.ThreadPoolExecutor(max_workers=16) as executor:
+        futures = [executor.submit(load_and_regrid_item, it, bbox, grid_shape) for it in signed_items]
+        scanned = [f.result() for f in futures]
     
     # Filter out None values from failed reads
     valid_arrays = [arr for arr in scanned if arr is not None]
@@ -91,21 +95,28 @@ def build_lst_stack(
     
     return lst_stack
 
+def _fetch_s2_band(href: str, grid_shape: Tuple[int, int]) -> np.ndarray:
+    with rasterio.Env(GDAL_HTTP_TIMEOUT="15", GDAL_HTTP_MAX_RETRY="2"):
+        da = rioxarray.open_rasterio(href).rio.reproject("EPSG:4326", shape=grid_shape)
+    return da.values.squeeze().astype(float)
+
 def generate_ndvi_grid(
     s2_item: Any, 
     grid_shape: Tuple[int, int] = DEFAULT_GRID
 ) -> np.ndarray:
     """
-    Downloads Red and NIR bands from Sentinel-2, regrids them, and calculates NDVI.
+    Downloads Red and NIR bands from Sentinel-2 concurrently, regrids them, and calculates NDVI.
     """
-    logger.info("Regridding Sentinel-2 bands to calculate true NDVI...")
+    logger.info("Regridding Sentinel-2 bands in parallel to calculate true NDVI...")
     try:
-        with rasterio.Env(GDAL_HTTP_TIMEOUT="15", GDAL_HTTP_MAX_RETRY="2"):
-            red_da = rioxarray.open_rasterio(s2_item.assets["B04"].href).rio.reproject("EPSG:4326", shape=grid_shape)
-            nir_da = rioxarray.open_rasterio(s2_item.assets["B08"].href).rio.reproject("EPSG:4326", shape=grid_shape)
+        b04_href = s2_item.assets["B04"].href
+        b08_href = s2_item.assets["B08"].href
 
-        red = red_da.values.squeeze().astype(float)
-        nir = nir_da.values.squeeze().astype(float)
+        with concurrent.futures.ThreadPoolExecutor(max_workers=2) as executor:
+            fut_red = executor.submit(_fetch_s2_band, b04_href, grid_shape)
+            fut_nir = executor.submit(_fetch_s2_band, b08_href, grid_shape)
+            red = fut_red.result()
+            nir = fut_nir.result()
 
         # Calculate real NDVI: (NIR - Red) / (NIR + Red)
         ndvi_grid = np.clip((nir - red) / (nir + red + 1e-8), -1, 1).astype("float32")
