@@ -29,12 +29,13 @@ def run_simulation_pipeline(
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     logger.info(f"Running pipeline on device: {device}")
 
+    import time
+
+    t_prep_0 = time.time()
     # 1. Prepare data loaders from arrays
     _, val_loader = prepare_dataloaders(lst_stack, ndvi_grid, landcover_grid, land_mask, batch_size=4)
     
-    # 2. Grab a test sample from validation loader — keep the ground truth
-    # target this time (previously discarded as `_`), since it's needed to
-    # render the comparison plot against real satellite reality.
+    # 2. Grab a test sample from validation loader
     try:
         x_test, y_test = next(iter(val_loader))
         sample_input = x_test[0:1].to(device)
@@ -42,12 +43,9 @@ def run_simulation_pipeline(
     except Exception as e:
         logger.error(f"Failed to fetch sample from validation loader: {e}")
         raise ValueError("Validation loader is empty or improperly formatted.")
+    t_prep_s = round(time.time() - t_prep_0, 4)
 
-    # 3. Load both trained models. The baseline is only needed for the
-    # comparison visualization (it plays no role in the actual simulation
-    # or guardrail check below) — if its weights aren't available yet,
-    # don't fail the whole request over a missing image.
-    logger.info("Loading PINN model weights for simulation...")
+    # 3. Load trained model
     pinn_model = load_pinn().to(device)
 
     baseline_model = None
@@ -56,7 +54,8 @@ def run_simulation_pipeline(
     except Exception as e:
         logger.warning(f"Baseline model unavailable, skipping comparison plot: {e}")
 
-    # 4. Run the Realistic What-If Intervention
+    # 4. Run the Realistic What-If Intervention (Inference)
+    t_inf_0 = time.time()
     logger.info(f"--- Testing {intervention_type} Intervention (delta={delta}) ---")
     result = run_what_if(
         model=pinn_model, 
@@ -64,6 +63,11 @@ def run_simulation_pipeline(
         intervention_type=intervention_type, 
         delta=delta
     )
+    t_inf_s = round(time.time() - t_inf_0, 4)
+
+    logger.info(f"=== HEAT ENGINE INFERENCE TIMINGS ===")
+    logger.info(f"  • Preprocessing (DataLoader & Resampling): {t_prep_s}s")
+    logger.info(f"  • PINN Model Inference & Guardrails:        {t_inf_s}s")
 
     # Format the response for the API / Frontend
     status = result["guardrail"]["status"]

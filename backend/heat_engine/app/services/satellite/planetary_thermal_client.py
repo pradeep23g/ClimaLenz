@@ -1,9 +1,12 @@
+import logging
 import planetary_computer as pc
 from pystac_client import Client
 from datetime import datetime, timezone
 from typing import List, Optional, Tuple
 
 import numpy as np
+
+logger = logging.getLogger(__name__)
 
 from app.services.preprocessing import (
     DEFAULT_BBOX,
@@ -62,8 +65,8 @@ class PlanetaryThermalClient:
         # Sort chronologically using the helper function
         items = sorted(items, key=_get_item_datetime)
 
-        # Filter strictly for MOD11A1 (Terra satellite) and take the 5 most recent scenes for fast live processing
-        clean_items = [it for it in items if "MOD11A1" in it.id][-5:]
+        # Filter strictly for MOD11A1 (Terra satellite) and take the 15 most recent scenes to guarantee real, cloud-free data.
+        clean_items = [it for it in items if "MOD11A1" in it.id][-15:]
         print(f"Found {len(clean_items)} clean daily scenes for Terra satellite!")
 
         # Sign the URLs so rasterio/xarray can actually read the remote files
@@ -120,35 +123,53 @@ class PlanetaryThermalClient:
         date_range: str = "2026-07-01/2026-07-31",
         grid_shape: Tuple[int, int] = DEFAULT_GRID,
     ) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
-        """
-        One-call convenience wrapper that fetches everything the training/
-        simulation pipeline needs and hands back the same 4-tuple shape as
-        SyntheticThermalClient.build_training_arrays(), so
-        app/services/satellite/client_factory.py can swap real <-> synthetic
-        without the caller (app/main.py, training scripts) knowing the
-        difference.
+        import time
 
-        NDVI and landcover are comparatively slow-changing relative to daily
-        LST, so a single recent low-cloud Sentinel-2 scene and the static
-        ESA WorldCover map are reused across the whole LST time series
-        rather than re-fetched per day.
-        """
+        logger.info(f"=== HEAT ENGINE DATA FETCH START (date_range={date_range}) ===")
+        t_total_fetch_0 = time.time()
+
+        # 1. MODIS Search
+        t_modis_search_0 = time.time()
         modis_items = self.fetch_modis_data(bbox=bbox, date_range=date_range)
+        t_modis_search = round(time.time() - t_modis_search_0, 4)
+
         if not modis_items:
             raise ValueError(
                 f"No MODIS scenes found for bbox={bbox} over date_range={date_range}."
             )
-        lst_stack = build_lst_stack(modis_items, bbox=bbox, grid_shape=grid_shape)
 
+        date_min = _get_item_datetime(modis_items[0]).strftime("%Y-%m-%d")
+        date_max = _get_item_datetime(modis_items[-1]).strftime("%Y-%m-%d")
+        logger.info(f"MODIS Fetch Info: count={len(modis_items)} scenes, date_range_fetched=[{date_min} to {date_max}]")
+
+        # 2. MODIS Download & Regrid
+        t_modis_dl_0 = time.time()
+        lst_stack = build_lst_stack(modis_items, bbox=bbox, grid_shape=grid_shape)
+        t_modis_dl = round(time.time() - t_modis_dl_0, 4)
+
+        # 3. Sentinel-2 Search & Download
+        t_s2_0 = time.time()
         s2_item = self.fetch_sentinel2_item(bbox=bbox)
         if s2_item is None:
             raise ValueError(f"No low-cloud Sentinel-2 scene found for bbox={bbox}.")
         ndvi_grid = generate_ndvi_grid(s2_item, grid_shape=grid_shape)
+        t_s2 = round(time.time() - t_s2_0, 4)
 
+        # 4. ESA WorldCover Search & Download
+        t_wc_0 = time.time()
         wc_item = self.fetch_esa_worldcover_item(bbox=bbox)
         if wc_item is None:
             raise ValueError(f"No ESA WorldCover scene found for bbox={bbox}.")
         landcover_grid, land_mask = generate_landcover_and_mask(wc_item, grid_shape=grid_shape)
+        t_wc = round(time.time() - t_wc_0, 4)
+
+        t_total_fetch = round(time.time() - t_total_fetch_0, 4)
+        logger.info(f"=== HEAT ENGINE DATA FETCH TIMINGS ===")
+        logger.info(f"  • MODIS STAC Search:         {t_modis_search}s")
+        logger.info(f"  • MODIS Raster Downloads:    {t_modis_dl}s ({len(modis_items)} scenes: {date_min} -> {date_max})")
+        logger.info(f"  • Sentinel-2 NDVI Download:  {t_s2}s")
+        logger.info(f"  • ESA WorldCover Download:   {t_wc}s")
+        logger.info(f"  • Total Search + Download:   {t_total_fetch}s")
 
         return lst_stack, ndvi_grid, landcover_grid, land_mask
 
