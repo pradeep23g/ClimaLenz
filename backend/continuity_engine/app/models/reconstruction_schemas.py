@@ -30,6 +30,7 @@ class ReconstructionRequest(BaseModel):
 
 
 class ReconstructionResponse(BaseModel):
+    job_id: str
     optical_scene_id: str
     sar_scene_id: str
     provider: str

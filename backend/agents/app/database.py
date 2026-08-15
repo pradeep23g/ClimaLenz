@@ -12,6 +12,12 @@ load_dotenv()
 
 logger = logging.getLogger(__name__)
 
+if not os.getenv("SUPABASE_URL") or not os.getenv("SUPABASE_KEY"):
+    logger.warning(
+        "SUPABASE_URL or SUPABASE_KEY is missing from environment. "
+        "Agents will start, but database-dependent features will fail at runtime."
+    )
+
 _client: Optional[Client] = None
 
 

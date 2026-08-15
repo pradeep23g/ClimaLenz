@@ -22,7 +22,7 @@ class ThermalDataClient(Protocol):
         self,
         bbox: List[float] = ...,
         date_range: str = ...,
-    ) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+    ) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, str]:
         """
         Returns (lst_stack, ndvi_grid, landcover_grid, land_mask) ready to
         hand straight to training.dataset.prepare_dataloaders() or

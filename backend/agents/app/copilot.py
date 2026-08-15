@@ -257,7 +257,7 @@ Recent memory:
         )
     except Exception as e:
         return {
-            "answer": "Copilot generated in offline mode (Gemini API unreachable).",
+            "answer": "Live AI commentary unavailable — showing physics-engine output only.",
             "tool_results": [],
             "model": MODEL_NAME,
         }
@@ -329,7 +329,7 @@ Recent memory:
             )
             answer_text = final.text or "Completed tool execution."
         except Exception as e:
-            answer_text = "Copilot completed tool execution, but failed to generate a summary (Gemini API unreachable)."
+            answer_text = "Live AI commentary unavailable — showing physics-engine output only."
     else:
         answer_text = first.text or "I could not determine a tool to run."
 

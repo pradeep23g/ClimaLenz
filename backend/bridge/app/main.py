@@ -1,10 +1,12 @@
 from __future__ import annotations
 
 import logging
+import os
 import time
 
 import httpx
 from fastapi import FastAPI, HTTPException, status
+from fastapi.middleware.cors import CORSMiddleware
 
 from app.clients import fetch_heat_simulation, fetch_water_assessment
 from app.co_location import evaluate_colocation
@@ -20,7 +22,17 @@ app = FastAPI(
         "physics-guarded PINN output for one AOI. This is the layer that "
         "turns two independent engines into the actual ClimaLenz claim."
     ),
-    version="0.1.0",
+    version="0.2.0",
+)
+
+# CORS — the Bridge is the single frontend-facing orchestration boundary.
+_cors_origins = os.getenv("CORS_ALLOWED_ORIGINS", "*").split(",")
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=_cors_origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 

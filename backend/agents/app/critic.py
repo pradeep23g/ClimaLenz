@@ -362,7 +362,7 @@ Return JSON:
         notes = str(parsed.get("notes", "")).strip() or None
         return True, notes, claims
     except Exception as e:
-        return True, f"LLM audit failed or unavailable ({e}); ignored.", []
+        return True, "Live AI commentary unavailable — showing physics-engine output only.", []
 
 
 def _compute_score(

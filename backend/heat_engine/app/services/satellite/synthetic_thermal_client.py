@@ -82,7 +82,7 @@ class SyntheticThermalClient:
 
     def build_inference_arrays(
         self,
-        bbox: List[float] = DEFAULT_BBOX,
+        bbox: List[float] = [80.15, 12.98, 80.29, 13.11],
         date_range: str = "2025-01-01/2026-07-31",
         grid_shape: Tuple[int, int] = DEFAULT_GRID,
     ) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray, str]:

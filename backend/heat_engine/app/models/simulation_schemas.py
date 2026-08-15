@@ -54,6 +54,9 @@ class SimulationResponse(BaseModel):
     delta_t_grid: List[List[float]] = Field(
         ..., description="(H, W) grid of simulated-minus-baseline temperature change, in Celsius."
     )
+    data_provenance: str = Field(
+        ..., description="Provenance of input data: 'live', 'continuity_reconstructed', or 'synthetic_fallback'."
+    )
     visualization_base64: Optional[str] = Field(
         default=None, description="Optional base64-encoded PNG comparison plot."
     )
