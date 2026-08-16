@@ -16,7 +16,7 @@ def fetch_continuity_repair(geometry: dict, start_date: str, end_date: str) -> d
             "start_date": start_date,
             "end_date": end_date,
         },
-        timeout=300.0,
+        timeout=float(os.getenv("BRIDGE_CONTINUITY_TIMEOUT", "300.0")),
     )
     resp.raise_for_status()
     return resp.json()
@@ -44,7 +44,7 @@ def fetch_water_assessment(
     resp = httpx.post(
         f"{WATER_ENGINE_URL}/v1/assessments/generate",
         json=payload,
-        timeout=300.0,
+        timeout=float(os.getenv("BRIDGE_WATER_TIMEOUT", "300.0")),
     )
     resp.raise_for_status()
     return resp.json()  # -> EnvironmentalPipelineReport, JSON-decoded
@@ -66,7 +66,7 @@ def fetch_heat_simulation(bbox: list[float], intervention_type: str, delta: floa
             "intervention_type": intervention_type,
             "delta": delta,
         },
-        timeout=300.0,
+        timeout=float(os.getenv("BRIDGE_HEAT_TIMEOUT", "300.0")),
     )
     resp.raise_for_status()
     return resp.json()  # -> SimulationResponse, JSON-decoded
@@ -81,7 +81,7 @@ def fetch_reporter(session_id: str, consolidated_payload: dict, user_id: str = N
             "user_id": user_id,
             "consolidated_payload": consolidated_payload,
         },
-        timeout=30.0,
+        timeout=float(os.getenv("BRIDGE_REPORTER_TIMEOUT", "30.0")),
     )
     resp.raise_for_status()
     return resp.json()
@@ -95,7 +95,7 @@ def fetch_critic(session_id: str, engine_payload: dict, reporter_output: dict, u
             "engine_payload": engine_payload,
             "reporter_output": reporter_output,
         },
-        timeout=30.0,
+        timeout=float(os.getenv("BRIDGE_CRITIC_TIMEOUT", "30.0")),
     )
     resp.raise_for_status()
     return resp.json()

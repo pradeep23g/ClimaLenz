@@ -28,7 +28,7 @@ def fetch_reconstructed_raster(job_id: str) -> ObservationContext:
     url = f"{CONTINUITY_ENGINE_URL}/v1/reconstruction/{job_id}/raster"
     
     try:
-        resp = httpx.get(url, timeout=60.0)
+        resp = httpx.get(url, timeout=float(os.getenv("WATER_CONTINUITY_TIMEOUT", "60.0")))
         resp.raise_for_status()
     except httpx.HTTPStatusError as e:
         logger.error(f"Failed to fetch Continuity raster for job {job_id}: HTTP {e.response.status_code}")

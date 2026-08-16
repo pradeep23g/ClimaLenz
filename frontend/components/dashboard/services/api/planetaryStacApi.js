@@ -5,7 +5,7 @@
  */
 
 export const queryPlanetaryComputerStac = async (latitude, longitude) => {
-  const apiKey = import.meta.env.VITE_PLANETARY_COMPUTER_KEY;
+  const apiKey = process.env.NEXT_PUBLIC_PLANETARY_COMPUTER_KEY;
   const endpoint = 'https://planetarycomputer.microsoft.com/api/stac/v1/search';
   
   // Create small bounding box around target coordinate

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import logging
+import os
 
 from fastapi import FastAPI, HTTPException, status
 
@@ -17,7 +18,7 @@ from contextlib import asynccontextmanager
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    torch.set_num_threads(2)
+    torch.set_num_threads(int(os.getenv("TORCH_NUM_THREADS", "2")))
     logger.info("Loading CloudRepairUNet model weights at startup...")
     load_repair_model()
     yield

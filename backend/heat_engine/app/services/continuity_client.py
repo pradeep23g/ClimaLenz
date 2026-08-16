@@ -6,7 +6,9 @@ from typing import List
 
 logger = logging.getLogger(__name__)
 
-CONTINUITY_ENGINE_URL = "http://127.0.0.1:8003"
+import os
+
+CONTINUITY_ENGINE_URL = os.getenv("CONTINUITY_ENGINE_URL", "http://127.0.0.1:8003")
 
 def get_reconstructed_scene(bbox: List[float], start_date: str, end_date: str) -> np.ndarray:
     """
@@ -33,7 +35,7 @@ def get_reconstructed_scene(bbox: List[float], start_date: str, end_date: str) -
 
     logger.info(f"Calling continuity_engine for reconstruction (dates {start_date} to {end_date})")
     
-    with httpx.Client(timeout=60.0) as client:
+    with httpx.Client(timeout=float(os.getenv("HEAT_CONTINUITY_TIMEOUT", "60.0"))) as client:
         # 1. Start job and get metadata
         resp = client.post(f"{CONTINUITY_ENGINE_URL}/v1/reconstruction/repair", json=payload)
         resp.raise_for_status()

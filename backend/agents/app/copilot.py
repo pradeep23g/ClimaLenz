@@ -21,7 +21,7 @@ MODEL_NAME = os.getenv("GEMINI_COPILOT_MODEL", "gemini-2.5-pro")
 HEAT_ENGINE_URL = os.getenv("HEAT_ENGINE_URL", "http://localhost:8002").rstrip("/")
 WATER_ENGINE_URL = os.getenv("WATER_ENGINE_URL", "http://localhost:8001").rstrip("/")
 CONTINUITY_ENGINE_URL = os.getenv("CONTINUITY_ENGINE_URL", "http://localhost:8003").rstrip("/")
-COLOCATION_ENGINE_URL = os.getenv("COLOCATION_ENGINE_URL", "http://localhost:8004").rstrip("/")
+COLOCATION_ENGINE_URL = os.getenv("COLOCATION_ENGINE_URL", "http://localhost:8000").rstrip("/")
 
 # Initialize the unified SDK client in standard mode
 client = genai.Client()
@@ -34,7 +34,7 @@ class CopilotInput(BaseModel):
     prompt: str = Field(..., min_length=2)
 
 
-def _post(url: str, payload: Dict[str, Any], *, timeout: int = 25) -> Dict[str, Any]:
+def _post(url: str, payload: Dict[str, Any], *, timeout: int = int(os.getenv("COPILOT_ENGINE_TIMEOUT", "25"))) -> Dict[str, Any]:
     """
     Shared POST helper. Raises requests.HTTPError / requests.RequestException on
     failure — callers are responsible for catching and converting into a

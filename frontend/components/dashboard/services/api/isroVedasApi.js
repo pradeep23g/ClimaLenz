@@ -4,8 +4,8 @@
  */
 
 export const BHUVAN_CONFIG = {
-  baseUrl: import.meta.env.VITE_BHUVAN_API_URL || 'https://bhuvan-vec1.nrsc.gov.in/bhuvan/wms',
-  apiKey: import.meta.env.VITE_BHUVAN_API_KEY || '',
+  baseUrl: process.env.NEXT_PUBLIC_BHUVAN_API_URL || 'https://bhuvan-vec1.nrsc.gov.in/bhuvan/wms',
+  apiKey: process.env.NEXT_PUBLIC_BHUVAN_API_KEY || '',
   layers: {
     thermalLST: 'bhuvan:LST_MODIS_DAILY',
     ndviCanopy: 'bhuvan:NDVI_2024_INDIA',

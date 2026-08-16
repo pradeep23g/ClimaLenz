@@ -48,7 +48,7 @@ def main():
 
     print("\n📥 Step 2: Downloading & Regridding Remote Rasters (MODIS + S2 + ESA WorldCover)...")
     t_download_0 = time.time()
-    lst_stack, ndvi_grid, landcover_grid, land_mask = client.build_training_arrays(
+    lst_stack, ndvi_grid, landcover_grid, land_mask, _ = client.build_training_arrays(
         bbox=bbox,
         date_range=date_range,
         grid_shape=DEFAULT_GRID,

@@ -1,0 +1,53 @@
+name: ClimaLenz CI/CD
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+        cache: 'pip'
+        
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        # We install dependencies from each service for the test script
+        pip install -r backend/bridge/requirements.txt
+        pip install -r backend/water_engine/requirements.txt
+        pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cpu
+        pip install -r backend/heat_engine/requirements.txt
+        pip install -r backend/continuity_engine/requirements.txt
+        pip install -r backend/agents/requirements.txt
+        
+    - name: Run Comprehensive Tests
+      env:
+        CLIMALENZ_LOCAL_MOCK_API: "1"
+      run: |
+        python run_comprehensive_tests.py
+
+  build-frontend:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - name: Use Node.js 20
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+        cache: 'npm'
+        cache-dependency-path: frontend/package-lock.json
+    - name: Install frontend dependencies
+      working-directory: ./frontend
+      run: npm ci
+    - name: Build frontend
+      working-directory: ./frontend
+      run: npm run build

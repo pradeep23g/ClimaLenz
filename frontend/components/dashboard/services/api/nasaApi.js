@@ -4,7 +4,7 @@
  */
 
 export const fetchNasaPowerData = async (latitude, longitude) => {
-  const apiKey = import.meta.env.VITE_NASA_API_KEY;
+  const apiKey = process.env.NEXT_PUBLIC_NASA_API_KEY;
   
   // Calculate start/end dates for last 30 days
   const endDate = new Date();
