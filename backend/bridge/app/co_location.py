@@ -109,5 +109,8 @@ def evaluate_colocation(water_report: dict, heat_result: dict) -> dict:
         "heat_guardrail_status": guardrail_status,
         "heat_intervention_type": heat_result["intervention_type"],
         "heat_delta_summary": delta_summary,
+        "heat_visualization_base64": heat_result.get("visualization_base64"),
+        "water_scene_cloud_cover": water_report.get("cloud_cover_percentage"),
+        "water_scene_provider": water_report.get("data_provider"),
         "narrative": narrative,
     }

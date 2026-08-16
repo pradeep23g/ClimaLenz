@@ -60,10 +60,15 @@ def _distance_to_nearest_valid(cloud_mask: np.ndarray) -> np.ndarray:
 
     # Chunked to avoid an (H*W, N_valid) blowup on larger grids later.
     dist = np.empty(h * w, dtype=np.float32)
-    chunk = 2048
+    chunk = 256
     for start in range(0, all_coords.shape[0], chunk):
         block = all_coords[start : start + chunk]
-        diffs = np.abs(block[:, None, :] - valid_coords[None, :, :]).max(axis=2)
+        
+        # Compute abs differences separately for y and x to avoid (chunk, N, 2) allocation
+        dy = np.abs(block[:, None, 0] - valid_coords[None, :, 0])
+        dx = np.abs(block[:, None, 1] - valid_coords[None, :, 1])
+        diffs = np.maximum(dy, dx)
+        
         dist[start : start + chunk] = diffs.min(axis=1)
     return dist.reshape(h, w)
 

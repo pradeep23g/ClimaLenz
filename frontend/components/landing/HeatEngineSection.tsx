@@ -49,7 +49,7 @@ export default function HeatEngineSection() {
     visible: {
       pathLength: 1,
       opacity: 1,
-      transition: { duration: 1.3, ease: [0.16, 1, 0.3, 1] },
+      transition: { duration: 1.3 },
     },
   };
 
@@ -72,8 +72,8 @@ export default function HeatEngineSection() {
       initial={{ opacity: 0, y: 80 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: false, amount: 0.1 }}
-      transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-      style={{ "--he-accent": accent }}
+      transition={{ duration: 0.8 }}
+      style={{ "--he-accent": accent } as React.CSSProperties}
     >
       {/* Ambient field that washes the whole section toward the active state's color */}
       <div className={`he-field ${isPinnActive ? "safe" : "danger"}`} aria-hidden="true" />
@@ -338,7 +338,7 @@ export default function HeatEngineSection() {
                     strokeWidth="1.25"
                     strokeDasharray="6 4"
                     animate={{ strokeDashoffset: [0, -20] }}
-                    transition={{ duration: 1.6, repeat: Infinity, ease: "linear" }}
+                    transition={{ duration: 1.6, repeat: Infinity }}
                   />
                   <rect
                     x="50"
@@ -423,7 +423,7 @@ export default function HeatEngineSection() {
                   stroke={accent}
                   strokeWidth="1"
                   animate={{ r: [8, 14, 8], opacity: [0.6, 0, 0.6] }}
-                  transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+                  transition={{ duration: 2, repeat: Infinity }}
                 />
                 <circle cx={endpoint.x} cy={endpoint.y} r="4" fill={accent} />
               </svg>

@@ -23,7 +23,7 @@ export default function LimitationsPage() {
     visible: {
       opacity: 1,
       y: 0,
-      transition: { duration: 0.6, ease: [0.16, 1, 0.3, 1] },
+      transition: { duration: 0.6 },
     },
   };
 
@@ -102,7 +102,7 @@ export default function LimitationsPage() {
           className="limit-header"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+          transition={{ duration: 0.6 }}
         >
           <div style={{ fontFamily: "var(--mono)", fontSize: "11px", letterSpacing: "0.2em", color: "var(--cobalt-bright)", textTransform: "uppercase", marginBottom: "12px" }}>
             Honest AI Architecture • Disclosures

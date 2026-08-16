@@ -1,0 +1,16 @@
+INFO:     Started server process [15224]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://127.0.0.1:8000 (Press CTRL+C to quit)
+INFO:     127.0.0.1:53847 - "GET /health/status HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8001/v1/assessments/generate "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8002/v1/simulations/what-if "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://rynckiteewsuitataljt.supabase.co/rest/v1/assessment_snapshots "HTTP/2 201 Created"
+INFO:app.persistence:Saved verified snapshot for AOI hash 66931ff9b196f6f6a80316246c034ca93f282e6e56d5461c513652838965f8ed
+INFO:     127.0.0.1:53848 - "POST /v1/colocation/assess HTTP/1.1" 200 OK
+ERROR:app.main:water_engine failed: [WinError 10061] No connection could be made because the target machine actively refused it
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8002/v1/simulations/what-if "HTTP/1.1 200 OK"
+INFO:app.main:Live assessment failed or returned synthetic. Searching for LKG...
+INFO:httpx:HTTP Request: GET https://rynckiteewsuitataljt.supabase.co/rest/v1/assessment_snapshots?select=%2A&aoi_hash=eq.66931ff9b196f6f6a80316246c034ca93f282e6e56d5461c513652838965f8ed&is_verified=eq.True&order=computed_at.desc&limit=1 "HTTP/2 200 OK"
+INFO:app.main:Valid LKG found.
+INFO:     127.0.0.1:51778 - "POST /v1/colocation/assess HTTP/1.1" 200 OK

@@ -77,6 +77,7 @@ def execute_environmental_pipeline(
     observation_lookback_days: int = 30,
     cloud_tolerance_pct: float = 30.0,
     field_telemetry_history: Optional[List[FieldTelemetry]] = None,
+    continuity_job_id: Optional[str] = None,
 ) -> EnvironmentalPipelineReport:
     """
     Executes the end-to-end Core A Water Engine pipeline for a specified AOI polygon.
@@ -91,19 +92,18 @@ def execute_environmental_pipeline(
     query_end_date = date.today()
     query_start_date = query_end_date - timedelta(days=observation_lookback_days)
 
+    client = resolve_satellite_client()
+
     # 1. Acquire Satellite Imagery Observation Context
-    try:
-        client = resolve_satellite_client()
-        observation_context = client.retrieve_scene(
-            spatial_bounds=spatial_geometry,
-            search_start=query_start_date,
-            search_end=query_end_date,
-            max_cloud_tolerance=cloud_tolerance_pct,
-        )
-    except Exception as exc:
-        logger.warning(f"Live satellite gateway failed ({exc}). Falling back to synthetic provider.")
-        from app.services.satellite.synthetic_client import SyntheticObservationClient
-        client = SyntheticObservationClient()
+    if continuity_job_id:
+        from app.services.satellite.continuity_client import fetch_reconstructed_raster
+        try:
+            observation_context = fetch_reconstructed_raster(continuity_job_id)
+            # Override data_provider name for clarity if we want to, but client is now defined
+        except Exception as exc:
+            logger.error(f"Failed to fetch continuity raster: {exc}")
+            raise
+    else:
         observation_context = client.retrieve_scene(
             spatial_bounds=spatial_geometry,
             search_start=query_start_date,

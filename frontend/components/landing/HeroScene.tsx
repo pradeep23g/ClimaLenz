@@ -69,7 +69,7 @@ export default function HeroScene() {
             <motion.div
               initial={reducedMotion ? false : { opacity: 0, y: 18 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
+              transition={{ duration: 0.7 }}
               className="chip"
             >
               <span className="pulse" />
@@ -79,7 +79,7 @@ export default function HeroScene() {
             <motion.h1
               initial={reducedMotion ? false : { opacity: 0, y: 22 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.9, delay: 0.05, ease: [0.16, 1, 0.3, 1] }}
+              transition={{ duration: 0.9, delay: 0.05 }}
               className="hero-h1"
             >
               Map climate risk with{" "}
@@ -101,7 +101,7 @@ export default function HeroScene() {
             <motion.p
               initial={reducedMotion ? false : { opacity: 0, y: 18 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, delay: 0.25, ease: [0.16, 1, 0.3, 1] }}
+              transition={{ duration: 0.8, delay: 0.25 }}
               className="hero-para sec"
             >
               ClimaLenz fuses physics-informed neural networks (PINNs) and multi-agent AI 
@@ -112,7 +112,7 @@ export default function HeroScene() {
             <motion.div
               initial={reducedMotion ? false : { opacity: 0, y: 18 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, delay: 0.4, ease: [0.16, 1, 0.3, 1] }}
+              transition={{ duration: 0.8, delay: 0.4 }}
               className="hero-cta-group"
             >
               <Link href="/dashboard" className="btn btn-primary group">

@@ -15,9 +15,6 @@ from .database import get_chat_memory, log_agent_trace, log_chat_turn
 load_dotenv()
 
 
-# Point Google Cloud Auth directly to your untracked service account key
-os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = "/home/dharshansri2007/lenz/backend/gcp-key.json"
-
 # ------------------------------------
 MODEL_NAME = os.getenv("GEMINI_COPILOT_MODEL", "gemini-2.5-pro")
 
@@ -26,12 +23,8 @@ WATER_ENGINE_URL = os.getenv("WATER_ENGINE_URL", "http://localhost:8001").rstrip
 CONTINUITY_ENGINE_URL = os.getenv("CONTINUITY_ENGINE_URL", "http://localhost:8003").rstrip("/")
 COLOCATION_ENGINE_URL = os.getenv("COLOCATION_ENGINE_URL", "http://localhost:8004").rstrip("/")
 
-# Initialize the unified SDK client in Vertex AI mode
-client = genai.Client(
-    vertexai=True,
-    project="lenz-500509",
-    location="us-central1"
-)
+# Initialize the unified SDK client in standard mode
+client = genai.Client()
 # ------------------------------------
 
 

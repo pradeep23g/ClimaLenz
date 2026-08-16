@@ -18,7 +18,7 @@ export default function AboutPage() {
     visible: {
       opacity: 1,
       x: 0,
-      transition: { duration: 0.6, ease: [0.16, 1, 0.3, 1] },
+      transition: { duration: 0.6 },
     },
   };
 
@@ -46,7 +46,7 @@ export default function AboutPage() {
           className="about-header"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+          transition={{ duration: 0.6 }}
         >
           <div style={{ fontFamily: "var(--mono)", fontSize: "11px", letterSpacing: "0.2em", color: "var(--cobalt-bright)", textTransform: "uppercase", marginBottom: "16px" }}>
             Genesis • SD-40
@@ -94,7 +94,7 @@ export default function AboutPage() {
           initial={{ opacity: 0, y: 40 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, amount: 0.2 }}
-          transition={{ duration: 0.8, delay: 0.4, ease: [0.16, 1, 0.3, 1] }}
+          transition={{ duration: 0.8, delay: 0.4 }}
         >
           <div style={{ display: "flex", gap: "12px", alignItems: "center", marginBottom: "20px" }}>
             <Target className="text-[var(--cobalt-bright)]" size={24} />

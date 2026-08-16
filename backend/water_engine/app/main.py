@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 
 from fastapi import FastAPI, HTTPException, status
 from pydantic import BaseModel, Field
@@ -48,6 +48,10 @@ class AssessmentPayload(BaseModel):
         default_factory=list,
         description="Chronological physical ground-truth observations to compound the spectral risk score."
     )
+    continuity_job_id: Optional[str] = Field(
+        default=None,
+        description="Optional Continuity Engine job ID containing reconstructed optical data."
+    )
 
 
 @app.get("/health/status", tags=["Diagnostics"])
@@ -76,6 +80,7 @@ def generate_assessment(payload: AssessmentPayload) -> EnvironmentalPipelineRepo
             observation_lookback_days=payload.observation_lookback_days,
             cloud_tolerance_pct=payload.cloud_tolerance_pct,
             field_telemetry_history=payload.telemetry_history,
+            continuity_job_id=payload.continuity_job_id,
         )
         return report
 

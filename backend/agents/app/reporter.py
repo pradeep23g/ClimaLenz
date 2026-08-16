@@ -17,16 +17,8 @@ logger = logging.getLogger(__name__)
 
 MODEL_NAME = os.getenv("GEMINI_REPORTER_MODEL", "gemini-2.5-flash")
 
-# --- SURGICAL VERTEX AI INJECTION ---
-# Point Google Cloud Auth directly to your untracked service account key
-os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = "/home/dharshansri2007/lenz/backend/gcp-key.json"
-
-# Initialize the unified SDK client in Vertex AI mode
-client = genai.Client(
-    vertexai=True,
-    project="lenz-500509",
-    location="us-central1"
-)
+# Initialize the unified SDK client in standard mode (relies on GEMINI_API_KEY)
+client = genai.Client()
 # ------------------------------------
 
 

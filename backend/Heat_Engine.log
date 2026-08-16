@@ -1,0 +1,64 @@
+INFO:     Started server process [4880]
+INFO:     Waiting for application startup.
+INFO:app.main:Loading PINN model weights at startup...
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://127.0.0.1:8002 (Press CTRL+C to quit)
+INFO:     127.0.0.1:53846 - "GET /health/status HTTP/1.1" 200 OK
+INFO:app.services.satellite.client_factory:Initializing Live Planetary Computer Thermal Client Gateway.
+INFO:app.services.preprocessing:Processing up to 2 scenes for inference into a (64, 64) grid...
+INFO:app.services.preprocessing:Padding x_test (date 2026-07-29) using Continuity Engine.
+INFO:app.services.continuity_client:Calling continuity_engine for reconstruction (dates 2026-07-26 to 2026-08-01)
+ERROR:app.services.preprocessing:Continuity engine repair failed ([WinError 10061] No connection could be made because the target machine actively refused it). Falling back to synthetic.
+INFO:app.services.preprocessing:Padding y_real (date 2026-07-30) using Continuity Engine.
+INFO:app.services.continuity_client:Calling continuity_engine for reconstruction (dates 2026-07-27 to 2026-08-02)
+ERROR:app.services.preprocessing:Continuity engine repair failed ([WinError 10061] No connection could be made because the target machine actively refused it). Falling back to synthetic.
+INFO:app.services.preprocessing:Successfully built Inference input. Provenance: synthetic_fallback
+INFO:app.services.preprocessing:Regridding Sentinel-2 bands in parallel to calculate true NDVI...
+INFO:app.services.preprocessing:NDVI shape: (64, 64) | Range: -0.18 to 0.64
+INFO:app.services.preprocessing:Regridding ESA WorldCover for real water mask...
+INFO:app.services.preprocessing:Landcover shape: (64, 64) | Real water pixels detected: 489
+INFO:app.pipeline:Running inference pipeline on device: cpu
+INFO:app.pipeline:Loading PINN model weights for simulation...
+INFO:app.pipeline:--- Testing CANOPY Intervention (delta=0.15) ---
+INFO:app.services.what_if_engine:Running What-If simulation for CANOPY with delta=0.15...
+INFO:app.services.physics_guardrail:\u2705 Guardrail PASSED for CANOPY.
+INFO:app.services.what_if_engine:What-If complete. Guardrail status: PASSED
+INFO:app.pipeline:=== HEAT ENGINE INFERENCE TIMINGS ===
+INFO:app.pipeline:  • Preprocessing (DataLoader & Resampling): 0.0768s
+INFO:app.pipeline:  • PINN Model Inference & Guardrails:        0.1869s
+INFO:app.pipeline:Guardrail Status: PASSED
+INFO:app.pipeline:Details: Within safe cooling limits!
+Fetching MODIS STAC items for bbox [80.22, 13.04, 80.23, 13.05] over 2025-01-01/2026-07-31...
+Found 15 clean daily scenes for Terra satellite!
+Fetching Sentinel-2 item for bbox [80.22, 13.04, 80.23, 13.05]...
+Fetching ESA WorldCover item for bbox [80.22, 13.04, 80.23, 13.05]...
+INFO:     127.0.0.1:54015 - "POST /v1/simulations/what-if HTTP/1.1" 200 OK
+INFO:app.services.satellite.client_factory:Initializing Live Planetary Computer Thermal Client Gateway.
+INFO:app.services.preprocessing:Processing up to 2 scenes for inference into a (64, 64) grid...
+INFO:app.services.preprocessing:Padding x_test (date 2026-07-29) using Continuity Engine.
+INFO:app.services.continuity_client:Calling continuity_engine for reconstruction (dates 2026-07-26 to 2026-08-01)
+ERROR:app.services.preprocessing:Continuity engine repair failed ([WinError 10061] No connection could be made because the target machine actively refused it). Falling back to synthetic.
+INFO:app.services.preprocessing:Padding y_real (date 2026-07-30) using Continuity Engine.
+INFO:app.services.continuity_client:Calling continuity_engine for reconstruction (dates 2026-07-27 to 2026-08-02)
+ERROR:app.services.preprocessing:Continuity engine repair failed ([WinError 10061] No connection could be made because the target machine actively refused it). Falling back to synthetic.
+INFO:app.services.preprocessing:Successfully built Inference input. Provenance: synthetic_fallback
+INFO:app.services.preprocessing:Regridding Sentinel-2 bands in parallel to calculate true NDVI...
+INFO:app.services.preprocessing:NDVI shape: (64, 64) | Range: -0.18 to 0.64
+INFO:app.services.preprocessing:Regridding ESA WorldCover for real water mask...
+INFO:app.services.preprocessing:Landcover shape: (64, 64) | Real water pixels detected: 489
+INFO:app.pipeline:Running inference pipeline on device: cpu
+INFO:app.pipeline:Loading PINN model weights for simulation...
+INFO:app.pipeline:--- Testing CANOPY Intervention (delta=0.15) ---
+INFO:app.services.what_if_engine:Running What-If simulation for CANOPY with delta=0.15...
+INFO:app.services.physics_guardrail:\u2705 Guardrail PASSED for CANOPY.
+INFO:app.services.what_if_engine:What-If complete. Guardrail status: PASSED
+INFO:app.pipeline:=== HEAT ENGINE INFERENCE TIMINGS ===
+INFO:app.pipeline:  • Preprocessing (DataLoader & Resampling): 0.0772s
+INFO:app.pipeline:  • PINN Model Inference & Guardrails:        0.0938s
+INFO:app.pipeline:Guardrail Status: PASSED
+INFO:app.pipeline:Details: Within safe cooling limits!
+Fetching MODIS STAC items for bbox [80.22, 13.04, 80.23, 13.05] over 2025-01-01/2026-07-31...
+Found 15 clean daily scenes for Terra satellite!
+Fetching Sentinel-2 item for bbox [80.22, 13.04, 80.23, 13.05]...
+Fetching ESA WorldCover item for bbox [80.22, 13.04, 80.23, 13.05]...
+INFO:     127.0.0.1:51826 - "POST /v1/simulations/what-if HTTP/1.1" 200 OK

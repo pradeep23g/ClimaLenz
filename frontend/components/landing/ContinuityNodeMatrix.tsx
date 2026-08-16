@@ -66,7 +66,7 @@ export default function ContinuitySection() {
       initial={{ opacity: 0, y: 80 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: false, amount: 0.1 }}
-      transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+      transition={{ duration: 0.8 }}
     >
       
       {/* =======================================================================
@@ -177,28 +177,28 @@ export default function ContinuitySection() {
             </defs>
             <motion.circle cx="150" cy="150" r="110" fill="none" stroke="var(--line)" strokeWidth="0.5" strokeDasharray="2 6" />
             <motion.circle cx="150" cy="150" r="70" fill="none" stroke="var(--line-2)" strokeWidth="0.5" />
-            <motion.g animate={{ rotate: 360 }} transition={{ duration: 20, repeat: Infinity, ease: "linear" }} style={{ transformOrigin: "150px 150px" }}>
+            <motion.g animate={{ rotate: 360 }} transition={{ duration: 20, repeat: Infinity }} style={{ transformOrigin: "150px 150px" }}>
               <circle cx="150" cy="40" r="2" fill="var(--text-3)" />
               <circle cx="150" cy="260" r="2" fill="var(--text-3)" />
             </motion.g>
-            <motion.circle cx="150" cy="150" r="12" fill="var(--cobalt-bright)" filter="url(#glow)" animate={{ scale: [1, 1.1, 1], opacity: [0.9, 1, 0.9] }} transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut" }} />
+            <motion.circle cx="150" cy="150" r="12" fill="var(--cobalt-bright)" filter="url(#glow)" animate={{ scale: [1, 1.1, 1], opacity: [0.9, 1, 0.9] }} transition={{ duration: 2.5, repeat: Infinity }} />
             
             {pipelines.map((pipe, i) => (
               <g key={`pipe-${i}`}>
                 <line x1={pipe.x1} y1={pipe.y1} x2={pipe.x2} y2={pipe.y2} stroke={pipe.isBroken ? "var(--over-line)" : "var(--line-2)"} strokeWidth="1" strokeDasharray={pipe.isBroken ? "2 4" : "none"} />
                 {!pipe.isBroken && (
-                  <motion.line x1={pipe.x1} y1={pipe.y1} x2={pipe.x2} y2={pipe.y2} stroke="var(--cobalt-bright)" strokeWidth="1.5" strokeDasharray="10 100" initial={{ strokeDashoffset: 110 }} animate={{ strokeDashoffset: -10 }} transition={{ duration: 1.5, delay: pipe.delay, repeat: Infinity, ease: "linear" }} />
+                  <motion.line x1={pipe.x1} y1={pipe.y1} x2={pipe.x2} y2={pipe.y2} stroke="var(--cobalt-bright)" strokeWidth="1.5" strokeDasharray="10 100" initial={{ strokeDashoffset: 110 }} animate={{ strokeDashoffset: -10 }} transition={{ duration: 1.5, delay: pipe.delay, repeat: Infinity }} />
                 )}
               </g>
             ))}
             {sensorNodes.map((node) => (
               <motion.g key={node.id}>
-                <motion.circle cx={node.cx} cy={node.cy} r={node.r} fill="none" stroke={node.color} strokeWidth="1" initial={{ scale: 1, opacity: 0.8 }} animate={{ scale: 2.5, opacity: 0 }} transition={{ duration: 2, delay: node.delay, repeat: Infinity, ease: "easeOut" }} />
+                <motion.circle cx={node.cx} cy={node.cy} r={node.r} fill="none" stroke={node.color} strokeWidth="1" initial={{ scale: 1, opacity: 0.8 }} animate={{ scale: 2.5, opacity: 0 }} transition={{ duration: 2, delay: node.delay, repeat: Infinity }} />
                 <circle cx={node.cx} cy={node.cy} r={node.r} fill={node.color} />
               </motion.g>
             ))}
             {hiddenNodes.map((node) => (
-              <motion.circle key={node.id} cx={node.cx} cy={node.cy} r={node.r} fill={node.color} animate={{ opacity: [0.4, 1, 0.4] }} transition={{ duration: 1.5, delay: node.delay, repeat: Infinity, ease: "easeInOut" }} />
+              <motion.circle key={node.id} cx={node.cx} cy={node.cy} r={node.r} fill={node.color} animate={{ opacity: [0.4, 1, 0.4] }} transition={{ duration: 1.5, delay: node.delay, repeat: Infinity }} />
             ))}
           </svg>
         </div>

@@ -185,7 +185,7 @@ function WeightBar({ label, value, max = 0.4 }: { label: string; value: number; 
           initial={{ width: 0 }}
           whileInView={{ width: `${pct}%` }}
           viewport={{ once: true }}
-          transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1] }}
+          transition={{ duration: 0.9 }}
         />
       </div>
     </div>
@@ -244,7 +244,7 @@ function GuardrailBar({ label, celsius, max = 5.0 }: { label: string; celsius: n
           initial={{ width: 0 }}
           whileInView={{ width: `${pct}%` }}
           viewport={{ once: true }}
-          transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1] }}
+          transition={{ duration: 0.9 }}
         />
       </div>
     </div>
@@ -335,7 +335,7 @@ const agents = [
    ========================================================================== */
 const fadeUp = {
   hidden: { opacity: 0, y: 30 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: [0.16, 1, 0.3, 1] } },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.6 } },
 };
 
 const staggerContainer = {
@@ -688,7 +688,7 @@ export default function MethodologyPage() {
                   initial={{ opacity: 0, x: -16 }}
                   whileInView={{ opacity: 1, x: 0 }}
                   viewport={{ once: true, amount: 0.4 }}
-                  transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+                  transition={{ duration: 0.5 }}
                 >
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
                     <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>

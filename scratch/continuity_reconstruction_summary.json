@@ -1,4 +1,5 @@
 {
+  "job_id": "8634c078-9fd9-4f93-858d-5932084c9a35",
   "optical_scene_id": "S2B_MSIL2A_20260112T051059_R019_T43PGQ_20260112T073848",
   "sar_scene_id": "S1A_IW_GRDH_1SDV_20260111T004014_20260111T004039_062712_07DD09_rtc",
   "provider": "microsoft-planetary-computer-dual",

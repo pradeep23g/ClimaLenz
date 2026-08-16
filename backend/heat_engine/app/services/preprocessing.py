@@ -146,8 +146,13 @@ def build_inference_input(
     def get_date_str(item) -> str:
         if hasattr(item, "datetime") and item.datetime:
             return item.datetime.strftime("%Y-%m-%d")
-        if hasattr(item, "properties") and "datetime" in item.properties:
-            return item.properties["datetime"][:10]
+        if hasattr(item, "properties") and item.properties:
+            dt = item.properties.get("datetime")
+            if dt:
+                return dt[:10]
+            start_dt = item.properties.get("start_datetime")
+            if start_dt:
+                return start_dt[:10]
         # Fallback to general range if missing
         return date_range.split("/")[0] if "/" in date_range else "2026-07-01"
 
