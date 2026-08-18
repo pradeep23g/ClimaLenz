@@ -228,13 +228,17 @@ def build_inference_input(
     logger.info(f"Successfully built Inference input. Provenance: {provenance}")
     return x_test_arr, y_real_arr, provenance
 
-def _fetch_s2_band(href: str, grid_shape: Tuple[int, int]) -> np.ndarray:
+def _fetch_s2_band(href: str, bbox: List[float], grid_shape: Tuple[int, int]) -> np.ndarray:
     with rasterio.Env(GDAL_HTTP_TIMEOUT="15", GDAL_HTTP_MAX_RETRY="2"):
-        da = rioxarray.open_rasterio(href).rio.reproject("EPSG:4326", shape=grid_shape)
+        da = rioxarray.open_rasterio(href)
+        bbox_native = get_bbox_in_raster_crs(da, bbox)
+        da = da.rio.clip_box(*bbox_native, allow_one_dimensional_raster=True)
+        da = da.rio.reproject("EPSG:4326", shape=grid_shape)
     return da.values.squeeze().astype(float)
 
 def generate_ndvi_grid(
     s2_item: Any, 
+    bbox: List[float],
     grid_shape: Tuple[int, int] = DEFAULT_GRID
 ) -> np.ndarray:
     """
@@ -246,8 +250,8 @@ def generate_ndvi_grid(
         b08_href = s2_item.assets["B08"].href
 
         with concurrent.futures.ThreadPoolExecutor(max_workers=2) as executor:
-            fut_red = executor.submit(_fetch_s2_band, b04_href, grid_shape)
-            fut_nir = executor.submit(_fetch_s2_band, b08_href, grid_shape)
+            fut_red = executor.submit(_fetch_s2_band, b04_href, bbox, grid_shape)
+            fut_nir = executor.submit(_fetch_s2_band, b08_href, bbox, grid_shape)
             red = fut_red.result()
             nir = fut_nir.result()
 
@@ -263,6 +267,7 @@ def generate_ndvi_grid(
 
 def generate_landcover_and_mask(
     wc_item: Any, 
+    bbox: List[float],
     grid_shape: Tuple[int, int] = DEFAULT_GRID
 ) -> Tuple[np.ndarray, np.ndarray]:
     """
@@ -272,7 +277,10 @@ def generate_landcover_and_mask(
     logger.info("Regridding ESA WorldCover for real water mask...")
     try:
         with rasterio.Env(GDAL_HTTP_TIMEOUT="15", GDAL_HTTP_MAX_RETRY="2"):
-            wc_da = rioxarray.open_rasterio(wc_item.assets["map"].href).rio.reproject("EPSG:4326", shape=grid_shape)
+            wc_da = rioxarray.open_rasterio(wc_item.assets["map"].href)
+            bbox_native = get_bbox_in_raster_crs(wc_da, bbox)
+            wc_da = wc_da.rio.clip_box(*bbox_native, allow_one_dimensional_raster=True)
+            wc_da = wc_da.rio.reproject("EPSG:4326", shape=grid_shape)
         landcover_grid = wc_da.values.squeeze().astype("float32")
 
         # Create Dynamic Water Mask

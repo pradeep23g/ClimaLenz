@@ -25,7 +25,8 @@ export const ContinuityEngineDashboard = ({
   activeEngine,
   activeZone,
   onSelectZone,
-  livePredictions
+  livePredictions,
+  colocationResult,
 }) => {
   const continuityData = currentCity.continuityEngine;
 

@@ -15,10 +15,10 @@ load_dotenv()
 
 logger = logging.getLogger(__name__)
 
-MODEL_NAME = os.getenv("GEMINI_REPORTER_MODEL", "gemini-2.5-flash")
+MODEL_NAME = os.getenv("GEMINI_REPORTER_MODEL", "gemini-3.6-flash")
 
-# Initialize the unified SDK client in standard mode (relies on GEMINI_API_KEY)
-client = genai.Client()
+# Initialize the unified SDK client in standard mode (explicitly pass the GOOGLE_API_KEY)
+client = genai.Client(api_key=os.getenv("GOOGLE_API_KEY"))
 # ------------------------------------
 
 

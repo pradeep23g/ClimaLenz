@@ -16,11 +16,11 @@ from .database import log_agent_trace
 
 load_dotenv()
 
-CRITIC_MODEL = os.getenv("GEMINI_CRITIC_MODEL", "gemini-2.5-flash")
+CRITIC_MODEL = os.getenv("GEMINI_CRITIC_MODEL", "gemini-3.6-flash")
 CRITIC_ENABLE_LLM_AUDIT = os.getenv("CRITIC_ENABLE_LLM_AUDIT", "true").lower() == "true"
 
-# Initialize the unified SDK client in standard mode (relies on GEMINI_API_KEY)
-_client = genai.Client()
+# Initialize the unified SDK client in standard mode (explicitly pass the GOOGLE_API_KEY)
+_client = genai.Client(api_key=os.getenv("GOOGLE_API_KEY"))
 # ------------------------------------
 
 

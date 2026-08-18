@@ -7,20 +7,14 @@ import React, { useState } from 'react';
 import { useClimalenzData } from './hooks/useClimalenzData';
 import { Homepage } from './components/Homepage';
 import { Navbar } from './components/Navbar';
-import { Sidebar } from './components/Sidebar';
 import { RightConfigPanel } from './components/RightConfigPanel';
 import { SatelliteNoticeBar } from './components/SatelliteNoticeBar';
 import { MapLibreView } from './components/MapLibreView';
 
 // Engine Views
-import { WaterEngineDashboard } from './components/views/WaterEngineDashboard';
-import { HeatEngineDashboard } from './components/views/HeatEngineDashboard';
 import { ContinuityEngineDashboard } from './components/views/ContinuityEngineDashboard';
-import { BridgeView } from './components/views/BridgeView';
 import { AgentsView } from './components/views/AgentsView';
 import { OverviewDashboard } from './components/views/OverviewDashboard';
-import { AlertsView } from './components/views/AlertsView';
-import { SettingsView } from './components/views/SettingsView';
 
 export default function App() {
   // Navigation State: 'homepage' | 'dashboard'
@@ -57,30 +51,6 @@ export default function App() {
   // Render appropriate central engine view based on sidebar selection
   const renderMainView = () => {
     switch (activeEngine) {
-      case 'water':
-        return (
-          <WaterEngineDashboard
-            currentCity={currentCity}
-            onLocationChange={setCurrentCityOverride}
-            activeEngine={activeEngine}
-            activeZone={activeZone}
-            onSelectZone={setActiveZone}
-            livePredictions={livePredictions}
-            coefficients={coefficients}
-            selectedSatellite={selectedSatellite}
-          />
-        );
-      case 'heat':
-        return (
-          <HeatEngineDashboard
-            currentCity={currentCity}
-            onLocationChange={setCurrentCityOverride}
-            activeEngine={activeEngine}
-            activeZone={activeZone}
-            onSelectZone={setActiveZone}
-            livePredictions={livePredictions}
-          />
-        );
       case 'continuity':
         return (
           <ContinuityEngineDashboard
@@ -90,14 +60,6 @@ export default function App() {
             activeZone={activeZone}
             onSelectZone={setActiveZone}
             livePredictions={livePredictions}
-          />
-        );
-      case 'bridge':
-        return (
-          <BridgeView
-            pipelineStatus={pipelineStatus}
-            onTriggerSync={triggerBackendSync}
-            isSyncing={isLiveSyncing}
           />
         );
       case 'agents':
@@ -123,16 +85,6 @@ export default function App() {
               />
             </div>
           </div>
-        );
-      case 'alerts':
-        return <AlertsView currentCity={currentCity} />;
-      case 'settings':
-        return (
-          <SettingsView
-            selectedSatellite={selectedSatellite}
-            setSelectedSatellite={setSelectedSatellite}
-            satelliteSources={satelliteSources}
-          />
         );
       case 'overview':
       default:
@@ -170,11 +122,7 @@ export default function App() {
       {/* Main Workspace Layout (Left Sidebar + Center Canvas + Right Config Panel) */}
       <div className="flex-1 flex overflow-hidden">
         
-        {/* Left Navigation Sidebar */}
-        <Sidebar
-          activeEngine={activeEngine}
-          setActiveEngine={setActiveEngine}
-        />
+        {/* Left Navigation Sidebar Removed */}
 
         {/* Central Workspace Canvas */}
         <main className="flex-1 flex flex-col overflow-hidden bg-[#060911]">

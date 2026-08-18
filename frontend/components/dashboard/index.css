@@ -1,5 +1,5 @@
 @import "tailwindcss";
-
+@import "../../app/climalenz-design.css";
 /* Custom Scrollbars */
 ::-webkit-scrollbar {
   width: 6px;

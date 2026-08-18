@@ -102,7 +102,7 @@ class CoLocationReport(BaseModel):
     # Phase 3: Trust and Provenance
     provenance: str = "live"
     """Data provenance: 'live', 'continuity_reconstructed', or 'synthetic_fallback'."""
-    scene_confidence: Optional[float] = None
+    scene_confidence: Optional[Any] = None
     """Quantitative confidence score (0.0 to 1.0) of the underlying scene, if available."""
     caveats: list[str] = []
     """Explicit human-readable warnings regarding potential data degradation."""
@@ -120,3 +120,8 @@ class CoLocationReport(BaseModel):
     # Agent Intelligence
     reporter_narrative: Optional[dict[str, Any]] = None
     critic_audit: Optional[dict[str, Any]] = None
+
+class CopilotChatRequest(BaseModel):
+    session_id: str
+    user_id: Optional[str] = None
+    prompt: str

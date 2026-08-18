@@ -12,7 +12,7 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="h-screen w-screen overflow-hidden text-slate-100 bg-[#060911]">
+    <div className="text-slate-100 bg-[#060911]">
       {children}
     </div>
   );

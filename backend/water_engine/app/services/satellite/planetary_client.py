@@ -1,8 +1,8 @@
 from __future__ import annotations
 
 import logging
-from datetime import date, datetime, timezone
-from typing import Any, Dict, List, Tuple
+from datetime import date, datetime, timedelta, timezone
+from typing import Any, Dict, List, Tuple, Optional
 
 import numpy as np
 import planetary_computer
@@ -62,29 +62,113 @@ class PlanetaryComputerGateway:
         max_cloud_tolerance: float,
     ) -> ObservationContext:
         """
-        Executes spatial-temporal querying against the Sentinel-2 L2A catalog.
+        Executes spatial-temporal querying against the Sentinel-2 L2A catalog with a
+        multi-stage, provenance-preserving fallback policy:
+          1. Primary search: Preferred window under max_cloud_tolerance, most recent scene first.
+          2. Tier 1 fallback: Extended lookback window (up to 90 days) under max_cloud_tolerance, most recent scene first.
+          3. Tier 2 fallback: Preferred window, cloud cover threshold relaxed (lt 100%), sorted by cloud cover ascending.
+          4. Tier 3 fallback: Extended lookback window, cloud cover threshold relaxed (lt 100%), sorted by cloud cover ascending.
         """
-        temporal_window = f"{search_start.isoformat()}/{search_end.isoformat()}"
+        original_window = f"{search_start.isoformat()}/{search_end.isoformat()}"
+        matched_items: List[Any] = []
+        actual_window = original_window
+        actual_threshold = max_cloud_tolerance
+        fallback_reason: Optional[str] = None
 
         try:
+            # 1. Primary Search
             query_results = self._session.search(
                 collections=["sentinel-2-l2a"],
                 intersects=spatial_bounds,
-                datetime=temporal_window,
+                datetime=original_window,
                 query={"eo:cloud_cover": {"lt": max_cloud_tolerance}},
-                limit=5,  # Reduced limit to speed up JSON payload parsing
+                sortby=[{"field": "properties.datetime", "direction": "desc"}],
+                limit=5,
             )
             matched_items = list(query_results.items())
+
+            # 2. Tier 1 Fallback: Extend lookback window to 90 days keeping preferred cloud threshold
+            if not matched_items:
+                ext_start = search_end - timedelta(days=90)
+                actual_window = f"{ext_start.isoformat()}/{search_end.isoformat()}"
+                logger.info(
+                    f"No Sentinel-2 scene found under {max_cloud_tolerance}% cloud cover in {original_window}. "
+                    f"Attempting extended temporal lookback to {actual_window}..."
+                )
+                ext_results = self._session.search(
+                    collections=["sentinel-2-l2a"],
+                    intersects=spatial_bounds,
+                    datetime=actual_window,
+                    query={"eo:cloud_cover": {"lt": max_cloud_tolerance}},
+                    sortby=[{"field": "properties.datetime", "direction": "desc"}],
+                    limit=5,
+                )
+                matched_items = list(ext_results.items())
+                if matched_items:
+                    fallback_reason = (
+                        f"No Sentinel-2 scene found under preferred {max_cloud_tolerance}% cloud cover in requested window "
+                        f"({original_window}). Acquired clean observation ({matched_items[0].id}, "
+                        f"{float(matched_items[0].properties.get('eo:cloud_cover', 0)):.2f}% cloud) by extending temporal window to {actual_window}."
+                    )
+
+            # 3. Tier 2 Fallback: Preferred window with relaxed cloud cover threshold (lowest cloud first)
+            if not matched_items:
+                actual_window = original_window
+                actual_threshold = 100.0
+                logger.info(
+                    f"No Sentinel-2 scene found under {max_cloud_tolerance}% cloud cover in extended window. "
+                    f"Relaxing cloud cover threshold for window {original_window}..."
+                )
+                rel_results = self._session.search(
+                    collections=["sentinel-2-l2a"],
+                    intersects=spatial_bounds,
+                    datetime=original_window,
+                    query={"eo:cloud_cover": {"lt": 100.0}},
+                    sortby=[{"field": "properties.eo:cloud_cover", "direction": "asc"}],
+                    limit=5,
+                )
+                matched_items = list(rel_results.items())
+                if matched_items:
+                    fallback_reason = (
+                        f"No Sentinel-2 scene found under preferred {max_cloud_tolerance}% cloud cover in requested window "
+                        f"({original_window}). Acquired lowest cloud cover observation ({matched_items[0].id}, "
+                        f"{float(matched_items[0].properties.get('eo:cloud_cover', 0)):.2f}% cloud) by relaxing cloud cover threshold."
+                    )
+
+            # 4. Tier 3 Fallback: Extended window with relaxed cloud cover threshold (lowest cloud first)
+            if not matched_items:
+                ext_start = search_end - timedelta(days=90)
+                actual_window = f"{ext_start.isoformat()}/{search_end.isoformat()}"
+                actual_threshold = 100.0
+                logger.info(
+                    f"Relaxing cloud cover threshold for extended window {actual_window}..."
+                )
+                ext_rel_results = self._session.search(
+                    collections=["sentinel-2-l2a"],
+                    intersects=spatial_bounds,
+                    datetime=actual_window,
+                    query={"eo:cloud_cover": {"lt": 100.0}},
+                    sortby=[{"field": "properties.eo:cloud_cover", "direction": "asc"}],
+                    limit=5,
+                )
+                matched_items = list(ext_rel_results.items())
+                if matched_items:
+                    fallback_reason = (
+                        f"Acquired lowest cloud cover observation ({matched_items[0].id}, "
+                        f"{float(matched_items[0].properties.get('eo:cloud_cover', 0)):.2f}% cloud) using extended window ({actual_window}) "
+                        f"and relaxed cloud threshold."
+                    )
+
         except Exception as api_err:
             raise EarthObservationError(f"STAC API query failed: {api_err}") from api_err
 
         if not matched_items:
             raise SceneNotFoundError(
-                f"No usable Sentinel-2 L2A scenes found under {max_cloud_tolerance}% cloud cover "
-                f"for the requested window: {temporal_window}."
+                f"No usable Sentinel-2 L2A scenes found under any acquisition policy "
+                f"for the requested window: {original_window}."
             )
 
-        # Select the most recent valid observation
+        # Select the best matching observation
         target_scene = matched_items[0]
         authenticated_scene = planetary_computer.sign(target_scene)
 
@@ -107,17 +191,28 @@ class PlanetaryComputerGateway:
         assets = authenticated_scene.assets
         preview_link = assets["rendered_preview"].href if "rendered_preview" in assets else None
 
+        scene_cloud = float(authenticated_scene.properties.get("eo:cloud_cover", 0.0))
+
+        extended_meta = {
+            "mgrs_grid": authenticated_scene.properties.get("s2:mgrs_tile"),
+            "processing_baseline": authenticated_scene.properties.get("s2:processing_baseline"),
+            "original_preferred_threshold": max_cloud_tolerance,
+            "actual_threshold_used": actual_threshold,
+            "actual_scene_cloud_cover": scene_cloud,
+            "temporal_window_requested": original_window,
+            "temporal_window_used": actual_window,
+        }
+        if fallback_reason:
+            extended_meta["fallback_reason"] = fallback_reason
+
         return ObservationContext(
             data_cube=data_cube,
             asset_id=authenticated_scene.id,
             acquisition_timestamp=acquisition_time,
-            cloud_fraction=float(authenticated_scene.properties.get("eo:cloud_cover", 0.0)),
+            cloud_fraction=scene_cloud,
             source_platform=authenticated_scene.properties.get("platform", "Sentinel-2"),
             preview_uri=preview_link,
-            extended_metadata={
-                "mgrs_grid": authenticated_scene.properties.get("s2:mgrs_tile"),
-                "processing_baseline": authenticated_scene.properties.get("s2:processing_baseline"),
-            }
+            extended_metadata=extended_meta,
         )
 
     def _extract_spatial_matrices(self, stac_item: Any, clipping_geometry: Dict[str, Any]) -> ReflectanceCube:

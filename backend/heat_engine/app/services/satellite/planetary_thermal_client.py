@@ -91,9 +91,9 @@ class PlanetaryThermalClient:
             sortby=[{"field": "properties.eo:cloud_cover", "direction": "asc"}],
             limit=5,
         )
-        items = list(search.items())
-        if items:
-            return items[0]
+        item = next(search.items(), None)
+        if item:
+            return item
         # Fallback search without cloud filter if no scene <50% found
         fallback_search = self.catalog.search(
             collections=["sentinel-2-l2a"],
@@ -159,7 +159,7 @@ class PlanetaryThermalClient:
         s2_item = self.fetch_sentinel2_item(bbox=bbox)
         if s2_item is None:
             raise ValueError(f"No low-cloud Sentinel-2 scene found for bbox={bbox}.")
-        ndvi_grid = generate_ndvi_grid(s2_item, grid_shape=grid_shape)
+        ndvi_grid = generate_ndvi_grid(s2_item, bbox=bbox, grid_shape=grid_shape)
         t_s2 = round(time.time() - t_s2_0, 4)
 
         # 4. ESA WorldCover Search & Download
@@ -167,7 +167,7 @@ class PlanetaryThermalClient:
         wc_item = self.fetch_esa_worldcover_item(bbox=bbox)
         if wc_item is None:
             raise ValueError(f"No ESA WorldCover scene found for bbox={bbox}.")
-        landcover_grid, land_mask = generate_landcover_and_mask(wc_item, grid_shape=grid_shape)
+        landcover_grid, land_mask = generate_landcover_and_mask(wc_item, bbox=bbox, grid_shape=grid_shape)
         t_wc = round(time.time() - t_wc_0, 4)
 
         t_total_fetch = round(time.time() - t_total_fetch_0, 4)
@@ -204,12 +204,12 @@ class PlanetaryThermalClient:
         s2_item = self.fetch_sentinel2_item(bbox=bbox)
         if s2_item is None:
             raise ValueError(f"No low-cloud Sentinel-2 scene found for bbox={bbox}.")
-        ndvi_grid = generate_ndvi_grid(s2_item, grid_shape=grid_shape)
+        ndvi_grid = generate_ndvi_grid(s2_item, bbox=bbox, grid_shape=grid_shape)
 
         wc_item = self.fetch_esa_worldcover_item(bbox=bbox)
         if wc_item is None:
             raise ValueError(f"No ESA WorldCover scene found for bbox={bbox}.")
-        landcover_grid, land_mask = generate_landcover_and_mask(wc_item, grid_shape=grid_shape)
+        landcover_grid, land_mask = generate_landcover_and_mask(wc_item, bbox=bbox, grid_shape=grid_shape)
 
         return x_test, y_real, ndvi_grid, landcover_grid, land_mask, data_provenance
 

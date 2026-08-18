@@ -38,14 +38,26 @@ def get_reconstructed_scene(bbox: List[float], start_date: str, end_date: str) -
     with httpx.Client(timeout=float(os.getenv("HEAT_CONTINUITY_TIMEOUT", "60.0"))) as client:
         # 1. Start job and get metadata
         resp = client.post(f"{CONTINUITY_ENGINE_URL}/v1/reconstruction/repair", json=payload)
-        resp.raise_for_status()
+        try:
+            resp.raise_for_status()
+        except httpx.HTTPStatusError as e:
+            if e.response.status_code == 404:
+                logger.warning("Continuity engine returned 404 Not Found. Triggering fallback.")
+                raise Exception("Continuity engine 404 Not Found") from e
+            raise
         
         job_id = resp.json()["job_id"]
         logger.info(f"Continuity Engine job created: {job_id}. Fetching raster...")
 
         # 2. Fetch the numpy binary
         raster_resp = client.get(f"{CONTINUITY_ENGINE_URL}/v1/reconstruction/{job_id}/raster")
-        raster_resp.raise_for_status()
+        try:
+            raster_resp.raise_for_status()
+        except httpx.HTTPStatusError as e:
+            if e.response.status_code == 404:
+                logger.warning("Continuity engine raster returned 404 Not Found. Triggering fallback.")
+                raise Exception("Continuity engine raster 404 Not Found") from e
+            raise
         
         # 3. Deserialize (.npy format)
         buf = io.BytesIO(raster_resp.content)

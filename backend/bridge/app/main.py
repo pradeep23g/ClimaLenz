@@ -139,6 +139,19 @@ def assess_colocation(payload: CoLocationRequest) -> CoLocationReport:
                     "total_s": total_s,
                 }
                 
+                # Extract missing fields from engines
+                if "data_provenance" in heat_result:
+                    result["provenance"] = heat_result["data_provenance"]
+                if "data_confidence" in water_report:
+                    result["scene_confidence"] = water_report["data_confidence"]
+                
+                caveats = []
+                w_cav = water_report.get("caveats", [])
+                h_cav = heat_result.get("caveats", [])
+                if isinstance(w_cav, list): caveats.extend(w_cav)
+                if isinstance(h_cav, list): caveats.extend(h_cav)
+                result["caveats"] = caveats
+                
                 # Apply Continuity metadata if it was used
                 if "_continuity_metadata" in water_report:
                     result.update(water_report["_continuity_metadata"])
@@ -213,8 +226,9 @@ def assess_colocation(payload: CoLocationRequest) -> CoLocationReport:
                 "stage_timings": b_res.get("stage_timings", {"water_engine_s":0, "heat_engine_s":0, "total_s":0}),
                 "reporter_narrative": b_res.get("reporter_narrative"),
                 "critic_audit": b_res.get("critic_audit"),
-                "provenance": snapshot.get("data_source", "live"),
-                "caveats": snapshot.get("source_scene_ids", [])
+                "provenance": snapshot.get("data_provenance", snapshot.get("data_source", "live")),
+                "scene_confidence": snapshot.get("scene_confidence", snapshot.get("data_confidence")),
+                "caveats": snapshot.get("caveats", [])
             }
             
             # Inject persistence metadata
@@ -264,3 +278,30 @@ def assess_colocation(payload: CoLocationRequest) -> CoLocationReport:
                 detail=f"Live computation failed, and no valid LKG snapshot exists. Errors: Water: {water_err}, Heat: {heat_err}",
             )
 
+
+from app.models import CopilotChatRequest
+
+@app.post("/v1/copilot/chat", tags=["Copilot Proxy"])
+def proxy_copilot_chat(payload: CopilotChatRequest) -> dict:
+    # Safely proxy the request to the agent service on port 8004
+    agent_url = os.getenv("AGENT_SERVICE_URL", "http://127.0.0.1:8004").rstrip("/")
+    target_url = f"{agent_url}/api/copilot/chat"
+    
+    try:
+        # Use a generous timeout for LLM generation
+        with httpx.Client(timeout=60.0) as client:
+            resp = client.post(target_url, json=payload.model_dump())
+            resp.raise_for_status()
+            return resp.json()
+    except httpx.HTTPStatusError as e:
+        logger.error(f"Copilot agent returned HTTP {e.response.status_code}: {e.response.text}")
+        raise HTTPException(
+            status_code=e.response.status_code,
+            detail=f"Agent service error: {e.response.text}"
+        )
+    except httpx.RequestError as e:
+        logger.error(f"Failed to reach Copilot agent: {e}")
+        raise HTTPException(
+            status_code=503,
+            detail="AI Copilot service is currently unavailable."
+        )

@@ -118,6 +118,9 @@ def execute_environmental_pipeline(
 
     # 3. Spatial Domain Caveat Verification
     pipeline_warnings: List[str] = []
+    if "fallback_reason" in observation_context.extended_metadata:
+        pipeline_warnings.append(observation_context.extended_metadata["fallback_reason"])
+
     if domain_category == AOIDomainCategory.TERRESTRIAL:
         pipeline_warnings.append(
             f"AOI is predominantly land (water coverage: {water_fraction:.1%}). Spectral readings reflect "

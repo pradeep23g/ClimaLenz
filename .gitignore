@@ -1,0 +1,9 @@
+# Documentation & Reports
+docs/
+phase_*.md
+*.log
+
+# Logs & Environment
+backend/*.log
+*.env
+.env.local

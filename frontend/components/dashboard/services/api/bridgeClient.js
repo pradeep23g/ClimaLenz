@@ -34,3 +34,36 @@ export async function assessColocation(payload) {
 
   return response.json();
 }
+
+/**
+ * Calls the Bridge Copilot Chat Proxy API.
+ * 
+ * @param {Object} payload 
+ * @param {string} payload.session_id - A unique session ID for the chat history
+ * @param {string} payload.prompt - The user's query
+ * @returns {Promise<Object>} The API response { answer, tool_results, model }
+ */
+export async function chatWithCopilot(payload) {
+  const url = `${BRIDGE_BASE_URL}/v1/copilot/chat`;
+  
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(payload)
+  });
+
+  if (!response.ok) {
+    let errorDetail = '';
+    try {
+      const errorBody = await response.json();
+      errorDetail = errorBody.detail || JSON.stringify(errorBody);
+    } catch (e) {
+      errorDetail = response.statusText;
+    }
+    throw new Error(`Copilot API Error (${response.status}): ${errorDetail}`);
+  }
+
+  return response.json();
+}

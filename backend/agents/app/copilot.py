@@ -16,7 +16,7 @@ load_dotenv()
 
 
 # ------------------------------------
-MODEL_NAME = os.getenv("GEMINI_COPILOT_MODEL", "gemini-2.5-pro")
+MODEL_NAME = os.getenv("GEMINI_COPILOT_MODEL", "gemini-3.6-flash")
 
 HEAT_ENGINE_URL = os.getenv("HEAT_ENGINE_URL", "http://localhost:8002").rstrip("/")
 WATER_ENGINE_URL = os.getenv("WATER_ENGINE_URL", "http://localhost:8001").rstrip("/")

@@ -14,7 +14,7 @@ from .database import log_agent_trace
 load_dotenv()
 
 # ------------------------------------
-MODEL_NAME = os.getenv("GEMINI_HISTORIAN_MODEL", "gemini-2.5-pro")
+MODEL_NAME = os.getenv("GEMINI_HISTORIAN_MODEL", "gemini-3.6-flash")
 
 # Initialize the unified SDK client in standard mode
 client = genai.Client()
